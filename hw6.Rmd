@@ -1,0 +1,426 @@
+---
+title: "Stat 111 Homework 6, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 3/24 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\bigskip
+
+
+\noin 1. In the 1970s the Consumer's Union assessed gas mileage, in miles per gallon (MPG), for 38 cars.  The gas mileage was measured on a test track. The dataset \texttt{cars.csv} has measurements of MPG and some other variables such as weight, horsepower, displacement, and  number of cylinders. Model the observations as i.i.d.~pairs $(X_j, Y_j)$, where the outcome $Y_j$ is log(MPG) and the predictor $X_j$ is the horsepower of the $j$th car, following the Gaussian linear model $$Y_j|(X_j = x) \sim \N(\theta_0 + \theta_1 x, \sigma^2).$$ We use log(MPG) rather than MPG as the outcome since often a log transformation improves the fit of a model for positive data.
+\medskip
+
+\noin (a) Provide numerical estimates of $\theta_0$ and $\theta_1$, the standard errors of these estimates, and a plot of the data including the fitted line.  
+
+\medskip
+
+\noin Hint: Some useful \texttt{R} code to conduct a linear regression with response variable $y$ and predictor variable $x$ (including an intercept) is:
+\begin{verbatim}
+model <- lm(y ~ x) # fit a linear model
+summary(model) # summarize the model fit
+residuals(model) # residuals of the model
+plot(x,y) # create a scatter plot of (x,y)
+abline(model) # add the fitted line to the plot
+\end{verbatim}
+
+\textbf{Solution:} The code for numerical estimates of $\theta_{0}$ and $\theta_{1}$, the standard error of each estimate, and the plot of the data is shown below. The numerical estimates for $\theta_{0}$ and $\theta_{1}$ are the estimates for (Intercept) and cars\$Horsepower respectively. The standard errors are also shown in the same printed summary.
+
+```{r}
+#set seed and import data
+set.seed(111)
+cars <- read.csv("cars.csv")
+
+#Create linear model
+carModel <- lm(log(cars$MPG) ~ cars$Horsepower)
+
+#Print numerical estimates for each theta. Theta_0 will be the y-intercept as that occurs
+#when x=0 and theta_2 will be the slope.
+summary(carModel)
+
+#Plot the line and data points
+plot(cars$Horsepower, log(cars$MPG), main="Log of MPG vs Horsepower", xlab="Horsepower",
+     ylab="Log(MPG)")
+abline(carModel)
+```
+
+ \medskip
+ 
+\noin (b) Using the estimated regression from (a), estimate the conditional mean of the $\log(\textrm{MPG})$  if the horsepower is 111.  Provide a $95$\% confidence interval for this conditional mean.   How would you explain the interpretation of this interval to a policy maker who is not a statistician?
+
+\smallskip
+
+\noin Note: In \texttt{R}, you may find the \texttt{predict.lm} function useful, with  \texttt{interval = "confidence"}.
+
+\textbf{Solution:} The code for the confidence interval is shown below.
+
+```{r}
+#set seed and initalize model
+set.seed(111)
+cars <- read.csv("cars.csv")
+carModel <- lm(log(MPG) ~ Horsepower,data=cars)
+predict.lm(carModel, data.frame(Horsepower=111), interval = "confidence", level = 0.95)
+```
+
+This means that the estimated conditional mean of $\log(\textrm{MPG})$ if the horsepower is 111 is 3.091253. The lower and upper bounds of our confidence interval are $3.04679$ and $3.135798$ respectively. We interpret this interval as the interval where the sample mean of any random sample of 38 cars with horsepower 111 lie with a $95\%$ chance.
+
+\medskip
+
+\noin (c) A new car comes on the market, with a horsepower of 111.  Using the estimated regression from (a), predict the $\log(\textrm{MPG})$ of the new car.  How is this prediction similar or different from the estimate from the previous part of the conditional mean of the $\log(\textrm{MPG})$?  Provide a $95$\% prediction interval for the $\log(\textrm{MPG})$ of the new car.  How is this interval similar or different from the confidence interval from the previous part?
+
+\smallskip
+
+\noin Note: In \texttt{R},  you can use \texttt{predict.lm} with the option \texttt{interval = "prediction"}.
+
+\textbf{Solution:} The code for the prediction is shown below.
+
+```{r}
+#set seed and initalize model
+set.seed(111)
+cars <- read.csv("cars.csv")
+carModel <- lm(log(MPG) ~ Horsepower,data=cars)
+predict.lm(carModel, data.frame(Horsepower=111), interval = "prediction", level = 0.95)
+```
+
+This means that our prediction is 3.091253 with a prediction interval $[2.828677,3.353829]$. The interval is wider than the previous part as there are now two sources of uncertainty. Part $b$ only predicted the value of an unknown conditional distribution of $Y_{j}|X_{j}=x$. In this part, we are not only predicting the unknown conditional distribution, but we are also getting an unknown quantutiy from this instead of just the mean. Therefore, there is more variability in this prediction which is why the interval is larger while the mean remains the same.
+\medskip
+
+\medskip
+
+\noin (d) Calculate the residuals of the regression from (a). What is the sum of the residuals? What is the angle (in radians) between the horsepower vector and the residuals vector?
+
+\smallskip
+
+\noin Hint: For vectors $\mathbf{v}$ and $\mathbf{w}$ in $\mathbb{R}^n$,  the angle $\alpha$ between $\mathbf{v}$ and $\mathbf{w}$ satisfies $\mathbf{v} \cdot \mathbf{w} = |\mathbf{v}| \, |\mathbf{w}| \cos( \alpha)$, where $\mathbf{v} \cdot \mathbf{w} = \sum_{j=1}^n v_jw_j$ and $|\mathbf{v}| = \sqrt{ \mathbf{v} \cdot \mathbf{v}}$ (and similarly for $|\mathbf{w}|$). In \texttt{R}, you can calculate cosine with \texttt{cos} and arccosine with \texttt{acos}.
+
+\begin{Solution:} The code for calculating the residuals and the angle between the horsepower and residuals vector is shown below.
+
+```{r}
+#set seed and intialize model
+set.seed(111)
+cars <- read.csv("cars.csv")
+carModel <- lm(log(MPG) ~ Horsepower,data=cars)
+
+#get residuals and horsepower vector
+residual <- residuals(carModel)
+horsepower <- cars$Horsepower
+
+#print out the sum of the residuals
+sum(residual)
+
+#angle calculation for hoursepower and residual vector
+innerProduct <- sum(residual*horsepower)
+normResidual <- sqrt(sum(residual*residual))
+normHorsepower <- sqrt(sum(horsepower*horsepower))
+
+cosValue <- innerProduct/(normResidual*normHorsepower)
+angle <- acos(cosValue)
+
+#print out angle
+angle
+```
+
+The sum of the residuals is $-4.16336\times10^{-17}$ and the angle between the two vectors is $1.560697$ radians.
+
+\medskip
+
+\noin (e) At the end of the day, we may want inferences about MPG, not $\log(\textrm{MPG})$; the goal of the log transformation was just to get a model that fits the data better. A naive way to convert the confidence interval from (b) to an interval for the conditional mean of the MPG if the horsepower is 111 is to exponentiate the endpoints of the interval from (b). Is this a valid procedure for constructing a 95\% confidence interval for the conditional mean of the MPG?
+
+\textbf{Solution:} We will let $[a,b]$ define our confidence interval. This means that
+
+$$
+P(a\leq E(Y_{j}|X_{j}=x)\leq b)=0.95
+$$
+
+We will now check if 
+
+$$
+P(e^{a}\leq e^{E(Y_{j}|X_{j}=x)}\leq e^{b})=0.95
+$$
+
+in order to see if exponentiating the endpoints is a valid method. To do so, we check if $E(e^{Y_{j}|X_{j}=x})$ and $e^{E(Y_{j}|X_{j}=x)}$ are equal. We know that $e^{x}$ is a concave up function, which means that $E(e^{Y_{j}|X_{j}=x})\neq e^{E(Y_{j}|X_{j}=x)}$ by Jensens inequality. Therefore, exponentiating the endpoints is not a valid method for constructing a $95\%$ confidence interval.
+\medskip
+
+\noin (f) Is exponentiating the endpoints from (c) a valid way to construct a 95\% prediction interval for the MPG of a new car with horsepower 111? 
+
+\textbf{Solution:} We will let $[a,b]$ define our prediction interval. This means that
+
+$$
+P(a\leq Y_{j}|X_{j}=x\leq b)=0.95\implies P(e^{a}\leq e^{Y_{j}|X_{j}=x}\leq e^{b})=0.95
+$$
+
+as $e^{x}$ is a injective function. As we define $Y_{j}|X_{j}=x$ as the log of the miles per gallon, we know that $e^{Y_{j}|X_{j}=x}$ is the miles per gallon. Therefore, we conclude that exponentiating the edpoints is a valid procedure for creating a $95\%$ confidence interval.
+\medskip
+
+\noin (g)  Let $(\hat{\theta}_0, \hat{\theta}_1, \hat{\sigma}^2)$ be the maximum likelihood estimator of $(\theta_0, \theta_1, \sigma^2)$. Suppose that our estimand though is the conditional mean of the MPG, given that the horsepower is $x$, rather than the conditional mean of log(MPG). Is $e^{\hat{\theta}_0 + \hat{\theta}_1 x}$ a consistent estimator for this estimand? If so, explain why. If not, provide a consistent estimator in terms of $\hat{\theta}_0, \hat{\theta}_1, \hat{\sigma}^2,$ and $x$.
+
+\textbf{Solution:} For clarity, we will continue using the problem definition of $Y_{j}|X_{j}=x$ as the log MPG and define $Z_{j}|X_{j}=x$ as the actual MPG.
+
+We know that $\hat{\theta_{0}}+\hat{\theta_{1}}x$ is a consistent estimator for $E(Y_{j}|X_{j}=x)$ as $Y_{j}|X_{j}=x\sim\mathcal{N}(\theta_{0}+\theta_{1}x,\sigma^{2})$ is given. Therefore, we know that $\hat{\theta_{0}}+\hat{\theta_{1}}x\overset{p}{\to} E(Y_{j}|X_{j}=x)$. Then, CMT gives us $e^{\hat{\theta_{0}}+\hat{\theta_{1}}x}\overset{p}{\to} e^{E(Y_{j}|X_{j}=x)}$. However, we already know that $e^{E(Y_{j}|X_{j}=x)}\neq E(e^{Y_{j}|X_{j}=x})$ by Jensens inequality as the exponential function is concave up. Therefore, we conclude that $e^{\hat{\theta_{0}}+\hat{\theta_{1}}x}$ is not a consistent estimator for the conditional mean of the miles per gallon.
+
+To see what an actual consistent estimator would be, we first note that $Z_{j}|X_{j}=x$ is log normal with parameters $\theta_{0}+\theta_{1}x,\sigma^{2}$. Therefore, a consistent estimator would be $e^{\hat{\theta_{0}}+\hat{\theta_{1}}x+\frac{\hat{\sigma}^{2}}{2}}$.
+
+\bigskip
+
+\noin 2. Consider the linear regression model 
+$$\textrm{E}[Y_j|X_j = x_j]=\theta x_j,$$
+where the pairs $(X_1,Y_1), \dots, (X_n,Y_n)$ are independent. Assume homoskedasticity:
+$$\var(Y_j | X_j = x_j) = \sigma^2,$$
+where $\sigma^2$ does not depend on $x_j$. Let $\hat{\theta}$ be the least squares estimator of $\theta$. 
+
+\medskip
+
+\noin (a)  A \emph{linear} estimator of $\theta$ is an estimator of the form $$\tilde{\theta}=\sum_{j=1}^n v_j Y_j,$$ where the $v_j$'s can involve $\mathbf{X}$ but can't involve $\mathbf{Y}$.   Suppose that $\tilde{\theta}$ is conditionally unbiased  (given $\mathbf{X} = \mathbf{x}$). Find the resulting constraint that the $v_j$'s must satisfy.
+
+\textbf{Solution:} As $\tilde{\theta}$ is conditionally unbiased, we know that
+
+$$
+E(\tilde{\theta}|\mathbf{X}=x)=E(\sum_{j=1}^{n}[v_{j}Y_{j}|X_{j}=x_{j}])=\theta
+$$
+
+We know that $v_{j}$ is a constant when conditioned on $X_{j}=x_{j}$. We also know that $E(Y_{j}|X_{j}=x_{j})=\theta x_{j}$. Therefore, linearity allows us to write
+
+$$
+E(\sum_{j=1}^{n}[v_{j}Y_{j}|X_{j}=x_{j}])=\theta(\sum_{j=1}^{n}v_{j}x_{j})
+$$
+
+Therefore, in order for $\tilde{\theta}$ to be conditionally unbiased, each $v_{j}$ must satisfy the condition
+
+$$
+\sum_{j=1}^{n}v_{j}x_{j}=1
+$$
+
+\medskip
+
+\noin (b) Find the conditional variance (given $\mathbf{X} = \mathbf{x}$) of $\hat\theta$ and the conditional variance of $\tilde{\theta}$.
+
+\textbf{Solution:} We will examine the conditional varience given $\mathbf{X}=\mathbf{x}$ of $\hat{\theta}$ and $\tilde{\theta}$ individually.
+
+First, we will examine $\hat{\theta}$. By definition of least squares, our desired value is
+
+$$
+\var(\hat{\theta}|\mathbf{X}=\mathbf{x})=\var(\sum_{j=1}^{n}[\frac{X_{j}Y_{j}}{X_{j}^{2}}|X_{j}=x_{j}])
+$$
+
+By conditioning, every $X_{j}=x_{j}$ is constant. We also know that each $(Y_{j},X_{j})$ pair is independent ant $\var{Y_{j}|X_{j}=x_{j}}=\sigma^{2}$. This lets us write
+
+$$
+\var(\sum_{j=1}^{n}[\frac{X_{j}Y_{j}}{X_{j}^{2}}|X_{j}=x_{j}])=\frac{\sum_{j=1}^{n}x_{j}^{2}}{[\sum_{j=1}^{n}x_{j}^{2}]^{2}}\var(Y_{1}|X_{1}=x_{1})=\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\sigma^{2}
+$$
+
+Therefore, the conditional variance of $\hat{\theta}$ is $\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\sigma^{2}$
+
+Next, we will examine $\tilde{\theta}$. Our desired value is
+
+$$
+\var(\tilde{\theta}|\mathbf{X}=\mathbf{x})=\var(\sum_{j=1}^{n}[v_{j}Y_{j}|X_{j}=x_{j}])
+$$
+
+As in part (a), we know that $v_{j}$ is a constant conditioned on $X_{j}=x_{j}$. We also know that each $(Y_{j},X_{j})$ pair is independent and that $\var{Y_{j}|X_{j}=x_{j}}=\sigma^{2}$, which allows us to write
+
+$$
+\var(\sum_{j=1}^{n}[v_{j}Y_{j}|X_{j}=x_{j}])=\sum_{j=1}^{n}v_{j}^{2}\var(Y_{j}|X_{j}=x_{j})=\sigma^{2}\sum_{j=1}^{n}v_{j}^{2}
+$$
+
+Therefore, the conditional variance of $\tilde{\theta}$ is $\sigma^{2}\sum_{j=1}^{n}v_{j}^{2}$.
+
+\medskip
+
+\noin (c)  Show that $\hat{\theta}$ is optimal among all linear unbiased estimators of $\theta$, in the sense that 
+$$\textrm{MSE}(\hat\theta|\mathbf{X}=\mathbf{x}) \le \textrm{MSE}(\tilde\theta|\mathbf{X}=\mathbf{x}).$$  
+
+\smallskip
+
+\noin Hint: Let $t = \sum_{j=1}^n x_j^2$. In working with $\sum_{j=1}^n v_j^2$, recall that it is often useful to add $0$ or to multiply by $1$ (with the $0$ or $1$ written in a convenient form). Specifically, note that 
+$$\sum_{j=1}^n v_j^2 =  \sum_{j=1}^n \left( v_j - \frac{x_j}{t} + \frac{x_j}{t} \right)^2 = 
+\sum_{j=1}^n \left( \left(v_j - \frac{x_j}{t}\right)^2 +  2 \left(v_j - \frac{x_j}{t} \right)\frac{x_j}{t} + \frac{x_j^2}{t^2} \right).$$
+
+\textbf{Solution:} We can make both $\tilde{\theta}$ and $\hat{\theta}$ conditionally unbiased. Therefore, to compare the conditional MSE, we only need to compare the conditional variance. We have the theoretical values for the conditional variances as follows from part (b).
+
+$$
+\var(\hat{\theta}|\mathbf{X}=\mathbf{x})=\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\sigma^{2} \text{ and } \var(\tilde{\theta}|\mathbf{X}=\mathbf{x})=\sigma^{2}\sum_{j=1}^{n}v_{j}^{2}
+$$
+
+Therefore, we want to show that $\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\leq\sum_{j=1}^{n}v_{j}^{2}$. For ease of notation, we will define $\sum_{j=1}^{n}x_{j}=t$. We can write
+
+$$
+\sum_{j=1}^{n}v_{j}=\sum_{j=1}^{n}((v_{j}-\frac{x_{j}}{t}+\frac{x_{j}}{t}))^{2}=\sum_{j=1}^{n}[(v_{j}-\frac{x_{j}}{t})^{2}+2(v_{j}-\frac{x_{j}}{t})\frac{x_{j}}{t}+(\frac{x_{j}}{t})^{2}]
+$$
+
+Bringing the summation sign into the expression and simplifying gives
+
+$$
+\sum_{j=1}^{n}v_{j}^{2}=\sum_{j=1}^{n}[(v_{j}-\frac{x_{j}}{t})^{2}]+\sum_{j=1}^{n}[\frac{2v_{j}x_{j}}{t}]-\sum_{j=1}^{n}\frac{x_{j}^{2}}{t^{2}}
+$$
+
+As we have set $\tilde{\theta}$ to be conditionally unbiased,w e know that $\sum_{j=1}^{n}v_{j}x_{j}=1$ from part (a). We also know that $\sum_{j=1}^{n}\frac{x_{j}^{2}}{t^{2}}=\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}$ by the definition of $t$. Substituting these values in gives
+
+$$
+\sum_{j=1}^{n}v_{j}^{2}=\sum_{j=1}^{n}[(v_{j}-\frac{x_{j}}{t})^{2}]+\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\geq\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}
+$$
+
+We know that the last inequality is true as the sum of squares is always non-negative. Therefore, we have $\frac{1}{\sum_{j=1}^{n}x_{j}^{2}}\leq\sum_{j=1}^{n}v_{j}^{2}$ which allows us to conclude 
+
+$$
+\textrm{MSE}(\hat\theta|\mathbf{X}=\mathbf{x})\leq\textrm{MSE}(\tilde\theta|\mathbf{X}=\mathbf{x})
+$$
+
+as desired.
+\bigskip
+
+\noin 3. The dataset \texttt{scores.csv} contains the midterm and final exam scores, out of 100 points, for a random sample of 250 students from Stat 110 from a particular year. Suppose that we want to use a student's midterm score to predict their final exam score. Let $\mathbf{x}$ be the vector of \emph{standardized} midterm scores (to standardize, subtract the sample mean and then divide by the standard deviation). Let $\mathbf{y}$ be the vector of standardized final exam scores.
+
+\medskip 
+
+\noin (a) Make a scatter plot of $(\mathbf{x},\mathbf{y})$ and compute the sample correlation of $\mathbf{x}$ and $\mathbf{y}$.
+
+\textbf{Solution:} The code for the graph and sample correlation is shown below
+
+```{r}
+#set seed and import data
+set.seed(111)
+scores <- read.csv("scores.csv")
+x <- scores$midterm
+y <- scores$final
+
+#Standardize the values
+x <- (x-mean(x))/(sd(x))
+y <- (y-mean(y))/(sd(y))
+
+#Create scatterplot
+plot(x,y, main="Standardized Final Scores vs Standardized Midterm Scores", xlab="Midterm",
+     ylab="Final")
+
+#Print out sample correlation
+cor(x,y)
+```
+
+\medskip
+
+\noin (b) Compute the slope of the fitted regression line for using $\mathbf{x}$ to predict $\mathbf{y}$.
+
+\textbf{Solution:} The code for calculating the slope is shown below.
+
+```{r}
+#set seed and import data
+set.seed(111)
+scores <- read.csv("scores.csv")
+x <- scores$midterm
+y <- scores$final
+
+#Standardize the values
+x <- (x-mean(x))/(sd(x))
+y <- (y-mean(y))/(sd(y))
+
+#Create the model and print the slope
+lm(y~x)$coefficients["x"]
+```
+\medskip
+
+\noin (c) Compute the slope of the fitted regression line for using $\mathbf{y}$ to predict $\mathbf{x}$. 
+
+\textbf{Solution:} The code for calculating the slope is shown below.
+
+```{r}
+#set seed and import data
+set.seed(111)
+scores <- read.csv("scores.csv")
+x <- scores$midterm
+y <- scores$final
+
+#Standardize the values
+x <- (x-mean(x))/(sd(x))
+y <- (y-mean(y))/(sd(y))
+
+#Create the model and print the slope
+lm(x~y)$coefficients["y"]
+```
+
+\medskip
+
+\noin (d) Explain mathematically why the relationship between the results of (b) and (c) holds. Then explain intuitively why the answer to (c) is \emph{not} the reciprocal of the answer to (b), even though intuitively it may seem that if we use $y = \theta x$ to predict $y$ using $x$, then, solving for $x$, we should use $x = (1/\theta) y$ to predict $x$ using $y$. 
+
+\textbf{Solution:} We will examine the mathematical equivalence and intuitive incorrectness individually.
+
+First, we examine the mathematical equivalence. We know that $R$ uses least squared regression. Therefore, we know that the analytical values for the slope in parts $b$ and $c$ are as follows.
+
+$$
+\frac{\sum_{j=1}^{n}x_{j}Y_{j}}{\sum_{j=1}^{n}x_{j}^{2}} \text{ and } \frac{\sum_{j=1}^{n}y_{j}X_{j}}{\sum_{j=1}^{n}y_{j}^{2}}
+$$
+
+As we have already normalized our data, we know that $\sum_{j=1}^{n}x_{j}^{2}=1$ and $\sum_{j=1}^{n}y_{j}^{2}=1$. We also know that $\sum_{j=1}^{n}x_{j}Y_{j}=\sum_{j=1}^{y_{j}X_{j}}$. Therefore, we conclude that 
+
+$$
+\frac{\sum_{j=1}^{n}x_{j}Y_{j}}{\sum_{j=1}^{n}x_{j}^{2}}=\frac{\sum_{j=1}^{n}y_{j}X_{j}}{\sum_{j=1}^{n}y_{j}^{2}}
+$$
+
+which explains why parts $b$ and $c$ have the same answer.
+
+We will now examine why the intuitive explination for the incorrectness of the reciprocal.
+
+\medskip
+
+\noin (e) What is the predicted final exam score (out of 100, not in standardized units) for a student who scored 1 standard deviation below the mean on the midterm? What about for a student who scored 1 standard deviation above the mean on the midterm? Explain intuitively why the answer is \emph{not} that a student who scored 1 SD below the mean on the midterm is predicted also to score 1 SD below the mean on the final. 
+
+\textbf{Solution:} The code for predicting the scores are shown below.
+
+```{r}
+#set seed and set up model
+set.seed(111)
+scores <- read.csv("scores.csv")
+
+x <- scores$midterm
+y <- scores$final
+scoreModel <- lm(y ~ x)
+
+oneBelow <- predict.lm(scoreModel,data.frame(x = mean(x)-sd(x)))
+oneAbove <- predict.lm(scoreModel,data.frame(x = mean(x)+sd(x)))
+
+oneBelow
+
+oneAbove
+```
+
+Therefore, the predicted final examine score of a student who scored 1 standard deviation below the mean and 1 standard deviation above the mean on the midterm are 48.36867 and 76.50333 respectively. The reason why the prediction is not one above and below the standard deviation of the mean on the final is because of regression to the mean. When data is relatively extreme, the prediction is more likely to be closer to be less extreme and closer to the mean. Therefore, our predictions are closer to the mean than one standard deviation.
+
+\medskip
+
+\noin (f) Suppose that Harvard offered a free tutoring service to everyone who scored $1$ or more standard deviations below the mean on the midterm, and that the average $\mathbf{y}$ value for those students was greater than the average $\mathbf{x}$ value for those students. Give at least two major reasons why we can't conclude that the tutoring service was effective in improving scores.
+
+\textbf{Solution:} There are two major reasons why we cannot conclude that the tutoring service was effective in improving scores. One major reason is because of the result of part $e$, as individuals who scored lower than the mean on the midterm are more likely to score better on the final. This improvement could be due to the tutoring or to the pattern in the data, which means that we cannot conclude that tutoring was responsible for the increase in scores for these students. The other big reason why we cannot conclude that the tutoring servie was effective in improving scores is the fact that correlation does not equal causation. There could be other external factors that increased the students scores which would still lead to a more positive correlation. These are two major reasons why we do not know if the tutoring service helped incresae the scores of students.

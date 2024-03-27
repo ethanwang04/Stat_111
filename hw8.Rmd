@@ -1,0 +1,623 @@
+---
+title: "Stat 111 Homework 8, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 4/7 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\bigskip
+
+\noin 1. A medical researcher is studying a recently introduced type of surgery. A group of $100$ patients will have the surgery. Let $p$ be the probability that the surgery is a success and assume (for simplicity) that the same $p$ is applicable to all patients, and that patients' outcomes are conditionally independent given $p$. 
+
+\medskip
+
+\noin Taking a Bayesian approach, $p$ is assigned a prior distribution. Based on prior data about similar types of surgeries, the prior mean of $p$ is $0.85$ and the prior standard deviation is $0.1$. 
+\medskip
+
+\noin (a)  Find the conjugate prior for $p$ that matches the provided prior mean and prior standard deviation.
+
+\textbf{Solution:} Let $Y_{i}$ be the indicator that the $ith$ surgery is successful with $Y_{i}=1$ if the surgery succeeds and $0$ otherwise for $i\in\{1,2,\dots,100\}$. We will also define $Y=Y_{1}+Y_{2}+\cdots+Y_{100}$ to be the total number of successful surgeries. Then, given our probability $p$, we have
+
+$$
+Y_{i}|p\sim\Bern(p)
+$$
+
+Once we have this, we can use Beta-Binomial conjugacy to write
+
+$$
+Y|p\sim\Bin(100,p) \text{ and } p\sim\Beta(\alpha,\beta)
+$$
+
+We know that $E(p)=\frac{\alpha}{\alpha+\beta}$ and $\var(p)=\frac{E(p)(1-E(p))}{\alpha+\beta+1}$. The problem also gives us that the mean and standard deviation of $p$ are $0.85$ and $0.1$ respectively ($0.1$ standard deviation means $0.1^{2}=0.01$ variance). Setting the expectation and variance equal to the values given in the problem and then solving for $\alpha$ and $\beta$ gives
+
+$$
+\alpha=9.9875 \text{ and } \beta=1.7625 \implies p\sim\Beta(9.9875,1.7625)
+$$
+
+Therefore, we conclude that our conjugate prior is $p\sim\Beta(9.9875,1.7625)$
+
+\medskip
+
+\noin (b) For the remainder of this problem, assume that it is observed that the surgery is successful on exactly $72$ of the $100$ patients. Find the posterior distribution of $p$. Also find the posterior mean of $p$ and the posterior standard deviation of $p$. 
+
+\textbf{Solution:} The data observed has $72$ successes and $28$ failures. Therefore, we use Beta-Binomial conjugacy to write our following conjugate posterior
+
+$$
+p|\mathbf{y}\sim\Beta(9.9875+72,1.7625+28)=\Beta(81.9875,29.7625)
+$$
+
+We know use the conjugate posterior to find the mean and variance of $p|\mathbf{y}$.
+
+$$
+E(p|\mathbf{y})=\frac{\alpha}{\alpha+\beta}=\frac{81.9875}{81.9875+29.7625}\approx0.73367
+$$
+$$
+\var(p\mathbf{y})=\frac{E(p)(1-E(p))}{\alpha+\beta+1}=\frac{0.73367(1-0.73367)}{81.9875+29.7625}\approx 0.00174853\implies\mathrm{sd}(p|\mathbf{y})=0.0418154
+$$
+
+Therefore, our posterior mean and standard deviation of $p$ are $0.73367$ and $0.0418154$ respectively.
+
+\medskip
+
+\noin (c) Plot the prior density, the likelihood function (normalized so that the area under the curve is $1$), and the posterior density. Is the posterior closer to the prior or to the likelihood? Why does your answer to the question in the previous sentence make sense intuitively?
+
+\textbf{Solution:} The code for plotting and the graphs are shown below
+
+```{r}
+p <- seq(0,1,length.out=2*10^3)
+n <- 100
+success <- 72
+alpha0 <- 9.9874
+beta0 <- 1.7625
+alpha1 <- alpha0+success
+beta1 <- beta0 + (n-success)
+
+likelihood <- dbeta(p,success,n-success)
+prior <- dbeta(p,alpha0,beta0)
+posterior <- dbeta(p,alpha1,beta1)
+
+plot(p,likelihood, xlab="p", ylab="density", main="Density Versus p-value",
+     xlim=c(0,1),ylim=c(0,10), col="red")
+lines(p,prior, xlab="p", ylab="density", xlim=c(0,1),ylim=c(0,10), col="green")
+lines(p,posterior, xlab="p", ylab="density", xlim=c(0,1),ylim=c(0,10), col="blue")
+legend("topleft", legend=c("Likelihood", "Prior", "Posterior")
+       ,col=c("Red","Green","Blue"), lwd=2)
+```
+
+As the graph shows, the likelihood is closer
+
+\medskip
+
+\noin (d)  Construct a 95\% credible interval for $p$ by cutting out 2.5\% off from each tail of the posterior distribution.
+
+\textbf{Solution:} To construct our interval, we will set $\alpha=0.05$ and cut off $\frac{\alpha}{2}$ from each end as specified in the problem. Our lower and upper bounds of our credible interval would then be $Q_{p|\mathbf{y}}(\frac{\alpha}{2})=Q_{p|\mathbf{y}}(0.025)$ and $Q_{p|\mathbf{y}}(1-\frac{\alpha}{2})=Q_{p|\mathbf{y}}(9.975)$ respectively. The R code used to calculate this is shown below
+
+```{r}
+qbeta(0.025,81.9875,29.7625)
+qbeta(0.975,81.9875,29.7625)
+```
+
+Therefore, our 95% credible interval is $[0.6483433,0.8110748]$
+
+\medskip
+
+\noin (e) Next week, $10$ more patients will have the surgery. Find the probability that the surgery will be successful for at least $9$ of these $10$ patients (mathematically). Give both an exact answer in terms of the gamma function, and a numerical approximation as a decimal. 
+
+\textbf{Solution:} We will define the indicators $Y_{101},\dots,Y_{110}$ the same way as we did in part (a). We will also have $Y_{n}=Y_{101}+\cdots+Y_{110}$ be the total number of successes in the next 10 patients. We then have $Y_{n}|p\sim\Bin(10,p)$. Then, our desired probability is $P(Y_{n}\geq 9|p)$. We have already observed $Y=\mathbf{y}=78$, so we condition on that as well. Therefore, our desired probability is
+
+$$
+P(Y_{n}\geq9|p,Y=\mathbf{y})=P(Y_{n}=9|p,Y=\mathbf{y})+P(Y_{n}=10|p,Y=\mathbf{y})
+$$
+
+To do find this probability, we will find an expression for $P(Y_{n}=\gamma|p,Y=\mathbf{y})$. Hybrid LOTP with extra conditioning gives
+
+$$
+P(Y_{n}=\gamma|p,Y=\mathbf{y})=\int_{0}^{1}P(Y_{n}=\gamma|p,Y=\mathbf{y})f(p|\mathbf{y})dp
+$$
+
+We already know that $p|\mathbf{y}\sim\Beta(81.9875,29.7625)$ from part (b), so we plug in the beta pdf for this and integrate. Some simplifications are shown below where $\alpha=81.9875$ and $\beta=29.7625$ and $B$ as the beta function defined as $B(\alpha,\beta)=\frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha)\Gamma(\Beta)}$.
+
+$$
+P(Y_{n}=\gamma|p,Y=\mathbf{y})=\int_{0}^{1}\binom{10}{\gamma}p^{\gamma}(1-p)^{10-\gamma}\frac{1}{B(\alpha,\beta)}p^{\alpha-1}(1-p)^{\beta-1}dp
+$$
+$$
+P(Y_{n}=\gamma|p,Y=\mathbf{y})=\binom{10}{\gamma}\frac{1}{B(\alpha,\beta)}B(\gamma+\alpha,10-\gamma+\beta)\int_{0}^{1}\frac{1}{B(\gamma+\alpha,10-\gamma+\beta)}p^{\gamma+\alpha-1}(1-p)^{10-\gamma+\beta-1}dp
+$$
+
+We know that $\int_{0}^{1}\frac{1}{B(\gamma+\alpha,10-\gamma+\beta)}p^{\gamma+\alpha-1}(1-p)^{10-\gamma+\beta-1}dp=1$ as it is the integral of the PDF of a $\Beta(\gamma+\alpha,10-\gamma+\beta)$ random variable over its support. Therefore, we have
+
+$$
+P(Y_{n}=\gamma|p,Y=\mathbf{y})=\binom{10}{\gamma}\frac{1}{B(\alpha,\beta)}B(\gamma+\alpha,10-\gamma+\beta)
+$$
+
+Plugging in all of our values for $\alpha$, $\beta$, and $\gamma$ and substituting our gamma function representation of the beta function gives us our final probability i n the form of gamma functions as desired.
+
+$$
+P(Y_{n}\geq9|p,Y=\mathbf{y})=\frac{\Gamma(111.75)}{\Gamma(81.9865)\Gamma(29.7625)}(\frac{10\Gamma(90.9875)\Gamma(30.7625)}{\Gamma(121.75)}+\frac{\Gamma(91.9875)\Gamma(29.7625)}{\Gamma(121.75)})
+$$
+
+Using a calculator to solve this gives $P(Y_{n}\geq9|p,Y=\mathbf{y})=0.22134$.
+
+\medskip
+
+\noin (f) Find the approximate probability from (e) via simulation (with at least $10^4$ replications) rather than mathematically. 
+
+\textbf{Solution:} The R code is shown below.
+
+```{r}
+set.seed(111)
+trials=10^4
+n <- 100
+success <- 72
+alpha0 <- 9.9875
+beta0 <- 1.7625
+alpha1 <- alpha0+success
+beta1 <- beta0 + (n-success)
+
+simulations <- rbinom(trials, 10, rbeta(trials, alpha1, beta1))
+
+length(simulations[simulations>=9]) / length(simulations)
+```
+
+Our simulated probability is 0.226 which is very close to our mathematically caluclated value of 0.22134.
+
+\bigskip
+
+\noin 2. A poll is being conducted to assess the public's level of approval for a policy proposal. Paul, a pollster, randomly selects adults and asks them a yes or no question for whether they support the proposal. Assume that there are no issues with non-response; everyone who is asked is willing to answer the question, and answers truthfully. Let $Y_j$ be the response of the $j$th person who is polled (with $1$ meaning yes and $0$ meaning no), and suppose that the $Y_j$ are independent $\Bern(\theta)$ random variables, where the estimand $\theta$ is the proportion of adults in the entire population who support the proposal. 
+
+\medskip
+
+\noin Ana, a public policy analyst, wants to know whether the majority of the public supports the proposal, and
+sets this up as a hypothesis test of $H_0: \theta \leq 1/2$ vs. $H_1: \theta > 1/2$, with the level fixed in
+advance as $\alpha = 0.05$, and a test statistic that rejects $H_0$ when the number of "yes" responses is large. 
+
+\medskip
+
+\noin Paul reports to Ana that he asked 12 individuals the question, and 9 said "yes" and 3 said "no". Ana is
+disappointed that Paul obtained such a small sample size and did not explain \emph{why} the sample size he ended up
+with was 12. Still, 75\% "yes" is a high proportion so she wonders if she has enough information to reject $H_0$.
+Before doing any calculations, she asks Paul to provide more detail about why Paul ended up with a sample size of 12. 
+
+\medskip
+
+\noin (a) Suppose for this part that Paul thought a dozen respondents would be plenty, so decided in advance
+to obtain a sample size of $12$. Compute the p-value for Ana's test. The null is composite but you can use the boundary value $\theta=1/2$ for computing the p-value, since for $\theta < 1/2$  the probability of a result at least as extreme as was observed would be even smaller.
+
+\textbf{Solution:} If we have $Y=Y_{1}+\cdots+Y_{12}$, then we know that $Y|\theta\sim\Bin(12,\theta)$. We are then looking for the probability that a random sample given $\theta=\frac{1}{2}$ would have more than $75\%$ yes responses. This is then
+
+$$
+P(Y\geq9|\theta=\frac{1}{2})=\sum_{i=9}^{12}\binom{12}{i}(\frac{1}{2})^{i}(\frac{1}{2})^{12-i}=(\frac{1}{2})^{12}\sum_{i=9}^{12}=0.073
+$$
+
+Therefore, the $p$-value for this test is $0.073$.
+
+\medskip
+
+\noin (b) For this part, suppose instead that Ana found out that Paul hoped to obtain a lot of "yes" responses, so decided in advance that he would continue collecting data until he obtained 9 "yes" responses. (This happened to result in a sample size of 12.) It would now be silly to use the number of "yes" responses as a test statistic (since it is deterministically equal to $9$). So for this part only, Ana uses the number of "no" responses as test statistic, rejecting the null when this number is small. Again compute the p-value for Ana's test. 
+
+\textbf{Solution:} We will denote the number of failures as $F$ where $F|\theta\sim\NBin(9,\theta)$. Now, we are looking for $P(F\leq3|\theta=\frac{1}{2})$. We have shown in the Stat 110 textbook that if we have $X\sim\Bin(n,p)$ and $Y\sim\NBin(r,p)$, then we have $P(X\geq r)=P(Y\leq n-r)$. Applying that result to $Y$ and $F$ gives
+
+$$
+P(F\leq3|\theta=\frac{1}{2})=P(Y\geq9|\theta=\frac{1}{2})=0.073.
+$$
+
+Therefore, the $p$-value for this test is the same as part (a)
+
+\medskip
+
+\noin (c) Now suppose instead that Paul was concerned about getting too few "no" responses, so decided in advance that he would continue collecting data until he obtained 3 "no" responses. Again compute the p-value for Ana's test. 
+
+\textbf{Solution:} We will now treat a no response as a success and a yes response as a failure. In this scenario, we will have $Y|\theta\sim\mathrm{Nbin}(3,1-\theta)$. Then, we will calculate our $p$ value using complimentary counting as follows
+
+$$
+P(Y\geq9|\theta=\frac{1}{2})=1-P(Y<9|\theta=\frac{1}{2})=1-\sum_{i=0}^{8}\binom{i+2}{2}(\frac{1}{2})^{i+3}\approx0.033
+$$
+
+Therefore, the $p$-value for this test is 0.033.
+
+\medskip
+
+\noin (d) Calculate the likelihood function $L(\theta)$ for each of (a), (b), (c). Are these three likelihood functions all equivalent?
+
+\textbf{Solution:} We will examine the likelihoods of each of these problems individually. Note that we have observed the number of successes and failures to be 9 and 3 respectively.
+
+In part (a), observing the successes was the same as observing the failures. In particular, we have the successes at 9 and the failures at 3. Therefore, our likelihood function is as follows.
+
+$$
+\binom{12}{9}\theta^{9}(1-\theta)^{3}
+$$
+
+In part (b), we observe the number of successes at 9 with $Y|\theta\sim\mathrm{Nbin}(9,\theta)$. Therefore, our likelihood is as follows
+
+$$
+binom{8+3}{3}\theta^{9}(1-\theta)^{3}
+$$
+
+In part (c), we have the number of failures at $3$ with $F|\theta\sim\mathrm{Nbin}(3,1-\theta)$. Therefore, our likelihood is as follows
+
+$$
+\binom{9+2}{2}\theta^{9}(1-\theta)^{3}
+$$
+
+Finally, we note that dropping the binomial constants from each likelihood function makes each function equal to $\theta^{9}(1-\theta)^{3}$ which means that all the likelihoods are equivalent.
+\medskip
+
+\noin (e) Now suppose that Ana decides to take a Bayesian approach and, rather than computing a p-value, compute the posterior
+probability of the null, $P(H_0 | \mathbf{y})$.  She adopts the prior $$\theta \sim \Unif(0,1).$$ What would have gone wrong if she had formulated the problem as $H_0: \theta = 1/2$ vs. $H_1: \theta \neq 1/2$, aside from the issue of whether a one-sided or a two-sided test is more relevant? For the formulation she \emph{is} using, compute $P(H_0 | \mathbf{y})$ based on the likelihood function or likelihood functions obtained in the previous part.
+
+\textbf{Solution:} Because the prior distribution of $\theta$ is continuous, the probability of $\theta=\frac{1}{2}$ is zero. Therefore, any observed data would be useless in providing insight into whether $H_{0}$ is true.
+
+We will now examine the formulation Ana is using. By Beta-Binomial conjugacy, we have $\theta|\mathbf{y}\sim\Beta(1+9,1+3)$. As $H_{0}: \theta<\frac{1}{2}$, we have
+
+$$
+P(H_{0}|\mathbf{y})=F(\frac{1}{2})
+$$
+
+where $F$ is the CDF of $\theta|\mathbf{y}$. This is calculated using the code below.
+
+```{r}
+pbeta(0.5,10,4)
+```
+\medskip
+
+\noin (f) Discuss the advantages and disadvantages of a p-value-based approach compared with a Bayesian approach for Ana's problem. 
+
+\textbf{Solution:} A p-valued approach does not need a specified prior for $\theta$ but depends on what sampling schemes were used. One disadvantage for p-valued approaches is that they only provide one value for the given data while there are some cases where a distribution of possibilities would be more helpful.
+
+On the other hand, a Bayesian approach does not depend on the sampling schemes but require a specified prior beforehand.One disadvantage for the Bayesian approach is the fact that assumptions are needed to make the prior distribution which introduces a source of error.
+
+\bigskip
+
+\noin 3. This problem is based on a communication with our colleague Mark Glickman involving his role as an expert witness for the Boston Red Sox. In June 2014, a woman who was sitting in the EMC Club at Fenway Park (luxury seating behind home plate) was struck in the face by a foul ball.  She sued the Boston Red Sox for negligence, having suffered facial fractures.  Part of the Red Sox's defense was that the risk of a serious injury in that part of the park was sufficiently low that the Red Sox organization was not negligent in protecting patrons to home games.
+
+\medskip
+
+\noin The following basic information was provided. Over 627 home games played at Fenway Park between the start of the 2007 season and June 2014, 10 incident reports were generated due to incidents where someone was hit by a foul ball above the shoulders in the EMC Club area and required medical attention. The EMC Club contains 398 seats (assume that the seats are always filled).  The main goal is to obtain an interval estimate for the probability that a patron sitting in the EMC Club area would be hit by a foul ball above the shoulders, with the incident sufficiently severe so as to generate an incident report and to require medical attention for the patron.
+
+\medskip
+
+\noin Let $Y_{ij}$ be the number of incidents involving the patron sitting in seat  $i$ at game $j$, and suppose that the $Y_{ij}$ are i.i.d. $\Pois(\lambda)$. The data provided are the aggregate value $$Y = \sum_{i,j} Y_{ij}.$$ Note that, assuming the model, $Y$ is a sufficient statistic so we do not lose information for estimating $\lambda$ by just using $Y$ rather than all of the individual $Y_{ij}$ to form our inferences. The main estimand is $$\theta = P(Y_{ij} > 0).$$ 
+
+\medskip
+
+\noin (a) Give two possible practical reasons why the i.i.d. assumption \emph{may} not hold: one reason why the $Y_{ij}$ may not actually be independent and one reason why they may not be identically distributed. Overall, do you think the i.i.d. assumption is plausible (at least approximately)? 
+
+\textbf{Solution:} These events are not necessarily identical as knowing someone got hit in a specific seat during a game lowers the probability that someone in a different seat in the same game gets hit as there are only so many chances for someone to get hit by a foul ball in a game.
+
+These events are not necessarily identically distributed as it is harder for foul balls to reach certain seats, so the probability is lower for those seats.
+
+\medskip
+
+\noin (b) Find the maximum likelihood estimates of $\lambda$ and $\theta$. Explain why they are close.
+
+\textbf{Solution:} We know that the Poisson distribution follows an NEF, so $\hat{\lambda}$ is just the sample mean. We know that $n=627\times 398$ and that there were 10 incidents of someone being hit above the shoulders with a ball. Therefore, the sample mean is
+
+$$
+\bar{Y}=\frac{10}{627\times 398}=4.007277\times 10^{-5}=\hat{\lambda}
+$$
+
+By complementary counting, definition of $\theta$, and the Poisson PMF, we can write the following
+
+$$
+\theta=P(Y_{ij}>0)=1-P(Y_{ij}=0)=1-e^{-\lambda}
+$$
+
+Invarience of the MLE gives
+
+$$
+\hat{\theta}=1-e^{-\hat{\lambda}}=4.007197\times10^{-5}
+$$
+
+The reason why these two values are so similar is that for small $x$, we have $e^{x} \approx 1+x \implies x\approx 1-e^{-x}$. This follows the same form as our MLE equation $\hat{\theta}=1-e^{-\hat{\lambda}}$. As $\hat{\lambda}$ is close to zero, we have $\hat{\theta}\approx\hat{\lambda}$.
+
+\medskip
+
+\noin (c) Taking a Bayesian approach, put a $\Gam(\alpha,\beta)$ prior on $\lambda$, with $\alpha = \beta  = 0.01$.  Plot the likelihood function $L(\lambda)$, the prior density for $\lambda$, and the posterior density for $\lambda$.
+
+\textbf{Solution:} We will examine the prior, likelihood, and posterior individually with R code to plot at the end of the problem.
+
+Prior: The prior distribution is given in the problem as $\lambda\sim\Gam(\alpha,\beta)=\Gam(0.01,0.01)$.
+
+Likelihood: By definition of a Poisson likelihood, we have
+
+$$
+L(\lambda|\mathbf{y})=\prod_{(i,j)=1}^{(398,627)}\frac{e^{-\lambda}\lambda^{y_{ij}}}{y_{ij}!}\implies L(\lambda|\mathbf{y})=e^{-398\times627\lambda}\lambda^{10}
+$$
+
+Posterior: We will use Gamma-Poisson conjugacy. This gives $\lambda|\mathbf{y}\sim\Gam(0.01+\mathbf{y},0.01+n)=\Gam(10.01,249546.01)$.
+
+The R code to graph and the plots are shown below.
+
+```{r}
+games <- 627
+seats <- 398
+hits <- 10
+lambda <- seq(0,10^-4,length.out=10^3)
+alpha0 <- 0.01
+beta0 <- 0.01
+alpha1 <- alpha0+hits
+beta1 <- beta0 + games * seats
+
+prior <- dgamma(lambda,alpha0,beta0)
+likelihood <- dgamma(lambda, hits+1, games * seats)
+posterior <- dgamma(lambda,alpha1,beta1)
+
+plot(lambda,likelihood, xlab="p", ylab="density", main="Density Versus p-value",
+     xlim=c(0,10^-4),ylim=c(0,10^5), col="red",)
+lines(lambda,prior, xlab="p", ylab="density", xlim=c(0,10^-4),ylim=c(0,10^5), col="green")
+lines(lambda,posterior, xlab="p", ylab="density", xlim=c(0,10^-4),ylim=c(0,10^5),
+      col="blue")
+legend("topleft", legend=c("Likelihood", "Prior", "Posterior"),col=c("Red","Green","Blue"),
+       lwd=2)
+```
+\medskip
+
+\noin (d) Find a 95\% credible interval for $\lambda$. Give an exact answer in terms of the quantile function of a named distribution, and a numerical answer.  
+
+\textbf{Solution:} We will define $Q$ to be the quantile function for a $\Gam(10.01,249546.01)$ random variable. Then, our credible interval is
+
+$$
+[Q(0.025),Q(0.975)]
+$$
+
+The interval is calculated below with r code
+
+```{r}
+qgamma(0.025,10.01,249546.01)
+qgamma(0.975,10.01,249546.01)
+```
+
+Therefore, the numerical interval is
+
+$$
+[1.924404\times10^{-5},6.851616\times10^{-5}]
+$$
+
+\medskip
+
+\noin (e) Find a 95\% credible interval for $\theta$ via simulation. 
+
+\textbf{Solution:} The R code is shown below.
+
+```{r}
+set.seed(111)
+trials <- 10^5
+
+lambda <- rgamma(trials,10.01,249546.01)
+theta <- 1-exp(-1 * lambda)
+
+quantile(theta, c(0.025,0.975))
+```
+
+Therefore, our simulated credible interval is
+
+$$
+[1.924313\times10^{-5},6.827791\times10^{-5}]
+$$
+
+\bigskip
+
+\noin 4. The Federalist Papers are a historically important collection of 85 papers, published in 1787 and 1788 under the pen name Publius, and intended to increase support for ratifying the Constitution. According to \href{https://www.youtube.com/watch?v=vYbdQAeO0vo}{Aaron Burr in the musical Hamilton} (by Lin-Manuel Miranda),
+\begin{quotation}
+\noin \emph{Alexander joins forces with James Madison and John Jay to write a series of essays \\
+Defending the new United States Constitution \\
+Entitled The Federalist Papers \\
+The plan was to write a total of twenty-five essays \\
+The work divided evenly among the three men \\
+In the end, they wrote eighty-five essays, in the span of six months \\
+John Jay got sick after writing five \\
+James Madison wrote twenty-nine \\
+Hamilton wrote the other fifty-one.}
+\end{quotation}
+
+\noin However, for 12 of the 85 papers the authorship is disputed. Fred Mosteller (the founder of the Harvard Statistics Department, and Joe's grand-advisor) and David Wallace used a statistical analysis of the text of the Federalist Papers to try to resolve the authorship controversy. They wrote up their findings  in their article \emph{Inference in an Authorship Problem} (Journal of the American Statistical Association, 1963). In this problem, you will try out a simplified version of this kind of analysis, focusing upon the word "upon". The dataset \texttt{federalistpapers.csv} on Canvas has the following variables.
+\vspace{0.1in}
+
+\begin{tabular}{ll}
+	\texttt{paper}: & which of the Federalist Papers, 1 through 85, in publication order\\
+	\texttt{author}: & the author: Hamilton, Jay, Madison, or Unknown \\
+	\texttt{wordcount}: & the total number of words in the paper (in thousands of words)\\
+	\texttt{uponcount}: & the number of times the word "upon" is used in the paper\\
+\end{tabular}
+\vspace{0.1in}
+
+\noin Suppose that the number of uses of the word "upon" in a document is $U \sim \Pois(\lambda w)$, where $w$ is the total number of words in the document (in thousands), and $\lambda$ is a rate parameter (specific to the author of the document), with $\lambda$ measured in usages of "upon" per thousand words. For simplicity, treat the number of words in each document as fixed and known (in a more extensive analysis it would be natural also to model the word counts, and the length of a document could be informative about its authorship). 
+
+\medskip
+
+\noin (a) Let $U_j$ and $w_j$ be the "upon" count and word count of the $j$th Federalist Paper known to be written by Hamilton, respectively, with $w_j$ measured in thousands of words. Let $\lambda_H$ be Hamilton's "upon" rate parameter and $\lambda_M$ be Madison's "upon" rate parameter. Two naive estimators of  $\lambda_H$ are:
+
+\medskip
+
+(i) Compute $U_j/w_j$, the number of "upon"s per thousand words in the $j$th paper known to be written by Hamilton, separately for each $j$, then take the sample mean of the $U_j/w_j$, or 
+
+\medskip
+
+(ii) Compute $(U_1+\dots+U_{51})/(w_1+\dots+w_{51})$, which aggregates all the "upon"s for the numerator and all of the words that Hamilton wrote for the denominator. 
+
+\medskip
+
+\noin Use the data to compute the two corresponding estimates.
+
+\medskip
+
+\textbf{Solution:} The R code for the calculations is shown below
+
+```{r}
+papers <- read.csv("federalistpapers.csv")
+hamilton <- subset(papers, author=="Hamilton")
+
+#i calculation
+mean(hamilton$upon_count/hamilton$word_count)
+#ii calculation
+sum(hamilton$upon_count)/sum(hamilton$word_count)
+```
+
+Therefore, the calculated values for $i$ and $ii$ are 3.21391 and 3.195946 respectively. This means that there are around 3 upons per thousand words that Hamilton wrote.
+
+\noin (b) Find the maximum likelihood estimators and maximum likelihood estimates of $\lambda_H$ and $\lambda_M$. Is the maximum likelihood estimator for $\lambda_H$ one of the estimators from (a)? 
+
+\medskip
+
+\textbf{Solution:} The likelihood function is as follows
+
+$$
+L(\lambda|U)=\prod_{i=1}^{n}\frac{(\lambda w_{i})^{u_{i}}e^{-\lambda w_{i}}}{u_{i}!}\implies L(\theta|U)=\prod_{i=1}^{n}\lambda^{u_{i}}e^{-\lambda w_{i}}=lambda^{n\bar{U}}e^{-n\bar{w}\lambda}.
+$$
+
+The log likelihood and score function are then as follows
+
+$$
+\ell(\lambda|U)=n\bar{U}\ln(\lambda)-n\bar{w}\lambda \text{ and } s(\lambda|U)=\frac{n\bar{U}}{\lambda}-n\bar{w}
+$$
+
+Setting the score function to zero and solving for $\lambda$ gives
+
+$$
+\hat{\lambda}=\frac{\bar{U}}{\bar{W}}
+$$
+
+This is the same estimator as $ii$ in part (a). Therefore, Hamilton's MLE is $\hat{\lambda}_{H}=3.195946$. The code to calculate Madison's MLE is shown below.
+
+```{r}
+papers <- read.csv("federalistpapers.csv")
+madison <- subset(papers, author=="Madison")
+
+sum(madison$upon_count)/sum(madison$word_count)
+```
+
+Therefore, Madison's MLE is $\hat{\lambda}_{M}=0.1810081$.
+
+\noin (c) For the remainder of this problem, assume that before studying the Federalist Papers we decide to use a prior that says that $\lambda_H$ and $\lambda_M$  are i.i.d. Exponentials with mean parameter $1.5$ (so rate parameter $2/3$). Find the posterior distribution of $(\lambda_H, \lambda_M)$, given the "upon" counts in the papers known to be written by Hamilton and the papers known to be written by Madison.
+
+\medskip
+
+\textbf{Solution:} To solve this question, we will find the joint PDF of $\lambda_{H}$ and $\lambda_{M}$. To do so, we will find each individual PDF and then multiply them. This is because $\lambda_{H}$ and $\lambda_{M}$ are independent as Hamilton and Madison have no relation on each other's writing styles.
+
+We will have our prior as $\lambda\sim\Expo(2/3)=\Gamma(1,\frac{2}{3})$ as given in the problem statement. Let $U$ be the total number of upons and $W$ be the total number of words written. Then $U|\lambda\sim\Pois(W\lambda)$ (this is by the fact that the sum of independent poissons is posison with the sum of their rate parameters). Then, gamma poisson conjugacy gives $\lambda|U=u\sim\Gamma(1+u,\frac{2}{3}+W)$.
+
+Once we have these, we plug in the values for Hamilton and Madison respectively to get the following posteriors.
+
+$$
+\lambda_{H}\sim\Gam(1+U_{H},\frac{2}{3}+W_{H})=\Gam(537,168.32667)
+$$
+
+$$
+\lambda_{M}\sim\Gam(1+U_{M},\frac{2}{3}+W_{M})=\Gam(14,72.48667)
+$$
+
+We will multiply these PDFs to get our final distribution of $(\lambda_{H},\lambda_{M})$ as follows
+
+$$
+f(\lambda_{H},\lambda_{M})=\frac{(168.32667)^{537}}{\Gamma(537)}(\lambda_{H})^{536}e^{-(168.32667)\lambda_{H}}\frac{72.48667^{14}}{\Gamma(14)}(\lambda_{M})^{13}e^{-72.48667\lambda_{M}}
+$$
+
+\noin (d) Construct a 95\% credible interval for $\lambda_H$ and a 95\% credible interval for $\lambda_M$. Also, calculate the posterior means, posterior medians, and posterior modes of $\lambda_H$ and $\lambda_M$. 
+
+\smallskip
+
+\noin Hint: The mode of a $\Gam(a,\lambda)$ r.v. is $(a-1)/\lambda$ for $a \geq 1$.
+
+\textbf{Solution:} We will use the posterior distributions to formulate quantile functions to find the credible intervals and median. We will also use the definition of the Gamma distribution to find the mean and mode of the data. The code is as follows
+
+```{r}
+papers <- read.csv("federalistpapers.csv")
+madison <- subset(papers, author=="Madison")
+hamilton <- subset(papers, author=="Hamilton")
+
+#All results will be hamilton first, then madison
+
+#credible intervals
+c(qgamma(0.025,537,168.32667),qgamma(0.975,537,168.32667))
+c(qgamma(0.025,14,72.48667),qgamma(0.975,14,72.48667))
+
+#mean (by definition, it is a/b)
+537/168.32667
+14/72.48667
+
+#median (0.5 quantile)
+qgamma(0.5,537,168.32667)
+qgamma(0.5,14,72.48667)
+
+#mode (by definition, it is (a-1)/b)
+(537-1)/168.32667
+(14-1)/72.48667
+
+```
+
+The credible interval, mean, median, and mode for Hamilton and Madison are 
+
+$$
+([2.926070,3.465632], 3.190225,3.188245,3.184284)\text{ and }([0.1055909,0.3066825],0.193139,0.1885604,0.1793433)
+$$
+
+respectively.
+
+\medskip
+
+\noin (e) The $50$th Federalist Paper has an unknown author (either Hamilton or Madison; assume the paper was not co-authored). Let the prior probability that Hamilton wrote this paper be $1/2$. Find the probability that Hamilton wrote the $50$th Federalist Paper, given the number of usages of "upon" in this paper. In your calculation, $(\lambda_H,\lambda_M)$ should have the posterior distribution you found in (c).
+
+\textbf{Solution:} We will let $U$ be the number of upons in paper 50 and $W$ be the number of words in paper 50. We will also denote $H$ as the event where hamilton wrote the paper and $M$ as the probability where Madison wrote the paper. Finally, we will also denote $p_{H}=P(H|U=u)$ and $p_{M}=P(M|U=u)$. Then, the probability that Hamilton wrote the paper is $\frac{p_{H}}{p_{H}+p_{M}}$.
+
+Bayes rule gives us
+
+$$
+P(H|U=u)=\frac{P(U=u|H)P(H)}{P(U=u)}\text{ and }P(M|U=u)=\frac{P(U=u|M)P(M)}{P(U=u)}
+$$
+
+We know that $P(U=u)$ is the same in each case as it is unconditional. We also have $P(M)=P(H)=\frac{1}{2}$ as it is the prior probability. Therefore, our desired probability is just
+
+$$
+\frac{P(U=u|H)}{P(U=u|H)+P(U=u|M)}
+$$
+
+From class, we have $U|H\sim\mathrm{NBin}(537,\frac{168.32667}{168.32667+w})$ and $U|H\sim\mathrm{NBin}(14,\frac{72.48667}{72.48667+w})$. The probability is calculated using the R code shown below
+
+```{r}
+papers <- read.csv("federalistpapers.csv")
+u <- papers[50,]$upon_count
+w <- papers[50,]$word_count
+
+ph <- dnbinom(u,537,168.32667/(168.32667+w))
+pm <- dnbinom(u,14,72.48667/(72.48667+w))
+
+ph/(ph+pm)
+```
+
+The probability that Hamilton wrote the 50th federalist paper is then 0.00188177 which means that it is unlikely that he is the author.

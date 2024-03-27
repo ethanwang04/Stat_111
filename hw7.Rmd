@@ -1,0 +1,572 @@
+---
+title: "Stat 111 Homework 7, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 3/31 (April Fools Eve and Joe's birthday) at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+
+
+\bigskip
+
+\noin 1. In the case Hazelwood School District v. United States (1977), which went to the Supreme Court, the United States argued that the Hazelwood School District in Missouri was practicing racial discrimination in their hiring of teachers. Data were presented showing that only 15 out of 405 (3.7\%) of the teachers hired by the school district were Black.
+
+\medskip
+
+\noin (a) In the original case, the District Court ruled in favor of the school district, saying ``The number of black teachers employed by the Hazelwood district is undeniably meager. Nonetheless, it has kept pace with the small but steadily increasing black enrollment in the district. For the 1970--71 school year the six black teachers hired by the Hazelwood district comprised less than one percent of its total faculty. However, the number of black students enrolled during that period was likewise only one percent of the total district attendance." 
+
+\medskip
+
+\noin The United States appealed this decision, arguing that the relevant population for comparison was the \emph{teachers} in St. Louis County and St. Louis City, not the \emph{students} in the Hazelwood district. (St. Louis City borders but is not included in St. Louis County, since the city seceded from the county in 1876.) About 15.4\% of the teachers in this population were Black, which intuitively seems like a massive disparity compared with the 3.7\% statistic in the Hazelwood district. The Appeals Court ruled in favor of the United States.
+
+\medskip
+
+\noin The school district then appealed the Appeals Court decision to the Supreme Court, arguing that St. Louis City should be excluded from the comparison population, due to the city having very different hiring guidelines than were present in the county.
+
+\medskip
+
+\noin Discuss the principles and considerations you would use in deciding on the population to compare the Hazelwood district statistic with. (You do \emph{not} need to resolve the question of whether teachers in St. Louis City should be included in the comparison population.)
+
+\textbf{Solution:} One major consideration that would have to be accounted for is the level of racial discrimination in the comparison population. The statistical test will only be able to show the level of racial discrimination of Hazelwood district in comparison to these districts. If the population that Hazelwood is being compared to is very discriminatory, then a test could show that Hazelwood is not racially biased while in reality it could just be less discrimination than the comparison population.
+
+Another consideration is to make sure that the applicant pool is representative of the population. As Hazelwood can only hire from the applicant pool, their numbers are actually representative of their applicant pool and not the entire population. A comparison population should have the same relationship between the applicant pool and their population to be as close to the Hazlewood district as possible to have a meaningful comparison.
+\medskip
+
+\noin (b) The Supreme Court ruled that the comparison should be with St. Louis County, excluding St. Louis City. In St. Louis County, 5.7\% of teachers were Black. Suppose that, before observing the data for Hazelwood district, we know that $n = 405$ teachers will be hired. Let $Y \sim \Bin(n,p)$ count how many of these $n$ teachers are Black. What would you use as your null and alternative hypotheses if you would like to show that Hazelwood district discriminates against Black teachers in their hiring process? Conduct this test (with $Y$ as test statistic), and find the p-value. (We are just looking at disparities in \emph{hiring}; of course in reality there are many complications such as who \emph{applies} for which jobs, how people are \emph{recruited}, etc.) 
+
+\medskip
+
+\noin Note: Your null hypothesis may be composite, in which case in computing the p-value you can do so under the value of $p$ that is at the border between $H_0$ and $H_1$.
+
+\textbf{Solution:} We will conduct a one-sided test, as we would like to see if the proportion is less than a certain cutoff. With this, we construct our null and alternate hypotheses as follows.
+
+$$
+H_{0}: p\geq 0.057 \text{ and } H_{1}: p< 0.057
+$$
+
+We also know that $X\sim\Bin(405,0.057)$ under the null hypothesis. Under this hypothesis, we then have the rejection region as
+
+$$
+R=\{x:x<Q(\alpha)\}
+$$
+
+where $Q$ is the quantile function for $X$. Then, our $p$ value is the lowest $\alpha$ such that our data is rejected. This is the same as 
+
+$$
+P(X\leq 15|p=0.057)
+$$
+
+Note that we have 15 as the observed number of black teachers is 15. This value is calculated with the code below
+
+```{r}
+pbinom(15,size=405,prob = 0.057)
+```
+
+Therefore, our desired $p$-value is 0.0455685.
+\medskip
+
+\noin (c) Repeat (b), except using a Normal approximation to the Binomial. 
+
+\textbf{Solution:} The normal approximation of our $X\sim\Bin(n,p)$ is as follows
+
+$$
+X\overset{.}{\sim}\mathcal{N}(np,np(1-p))
+$$
+
+Then, our Z statistic is
+
+$$
+z(X)=\frac{X-np}{\sqrt{np(1-p)}}\overset{.}{\sim}\mathcal{N}(0,1)
+$$
+
+Then, under the null hypothesis of $p=0.057$, we have
+
+$$
+z(X)=\frac{X-405\cdot0.057}{\sqrt{405\cdot0.057(1-0.057)}}
+$$
+
+Then, we can similarily calculate our $p$-value as we did in part (b). This gives
+
+$$
+P(X\leq 15|p=0.057)\approx\Phi(\frac{15-405\cdot0.057}{\sqrt{405\cdot0.057(1-0.057)}})
+$$
+
+This value is calculated with the code shown below
+
+```{r}
+pnorm((15 - 405 * 0.057)/(sqrt(405 * 0.057 *(1-0.057))), mean  = 0, sd = 1)
+```
+
+Therefore, our $p$-value for this case is 0.042. This value is very close to our calculated value in part (b).
+\medskip
+
+\noin (d) The majority opinion of the Supreme Court stated that "the expected value of 23 would be less than two standard deviations from the observed total of 15." Is this correct? The Supreme Court concluded that the null hypothesis of no discrimination could not be rejected (presumably setting $\alpha = 0.05$, and mentioning "two standard deviations" since $1.96 \approx 2$). 
+
+\textbf{Solution:} To see if the majority opinion is correct, we will find the mean and standard deviation of $X\sim\Bin(405,0.057)$. These values are as follows
+
+$$
+E(X)=405\cdot0.057=23.085 \text{ and } SD(X)=\sqrt{\Var(X)}=\sqrt{405\cdot0.057(1-0.057)}=4.\overline{6}
+$$
+
+From this, we can see that
+
+$$
+15 > 23.085 - 2\cdot 4.\overline{6}=13.651\overline{6}
+$$
+
+Then this would mean that we would fail to reject the null hypothesis in a two tailed test with $H_{0}:p=0.057$ and $H_{1}:p\neq0.057$. This menas that the majority opinion was correct.
+
+\medskip
+
+\noin (e) In a dissenting opinion, Justice Stevens stated that "one of my law clerks advised me that, given the size of the two-year sample, there is only about a 5\% likelihood that a disparity this large would be produced by a random selection from the labor pool." Was Justice Stevens's clerk correct? How can the discrepancy between the majority opinion failing to reject the null and Justice Stevens rejecting the null be reconciled?
+
+\textbf{Solution:} The clerk is correct, as per the calculations in part (b) and (c) yielding p-values of less than 0.05. However, the p-values calculated in those parts were using a one-tailed test. This disparity with between the one-tailed and two-tailed tests used by Justice Steven's clerk and the majority opinion explains how one could have failed to reject the null and one rejected the null.
+
+\bigskip
+
+\noin 2. Let $Y_1,\dots,Y_n$ be i.i.d. $\N(\mu,\sigma^2)$, with both parameters unknown. A t-test of $H_0: \mu = 0$ vs. $H_1: \mu \neq 0$ is being planned, where the sample size will be $n=10$. We do \emph{not} yet have data, so the p-value that we will obtain is still a random variable. 
+
+\medskip
+
+\noin (a) Assume for this part that the true mean is $\mu^* = 0$ and the true standard deviation is $\sigma^* = 1$. Generate $10^4$ simulated datasets and compute a p-value for the t-test for each simulated dataset. Plot a histogram of the $10^4$ p-values. Does it look like it is $\Unif(0,1)$?
+
+\textbf{Solution:} The code to plot the histogram is shown below.
+
+```{r}
+#set seed and generate data
+set.seed(111)
+reps <- 10^4
+n <- 10
+
+sim_p <- function(mu,sd){
+  data <- matrix(rnorm(reps * n, mean = mu, sd = sd), nrow = reps, ncol = n)
+  p <- apply(data, 1, function(x) {t.test(x)$p.value})
+  p
+}
+
+pvalues <- sim_p(0,1)
+
+hist(pvalues, freq = FALSE)
+```
+
+The histogram looks to be approximately $1$ at all values of $p$ between 0 and 1. Therefore, it looks approximately $\Unif(0,1)$.
+\medskip
+
+\noin (b) Explain in words how the histogram from (a) helps show that rejecting the null when the p-value is less than $\alpha$ gives a test with Type I error probability $\alpha$, and helps dispel the common mistake that the p-value is the probability of $H_0$ given the data.
+
+\textbf{Solution:} Type 1 error occurs when the null hypothesis is rejected from the observed data when it is actually true. as $p\overset{.}{\sim}\Unif(0,1)$, there is a $\alpha$ probability that $p<\alpha$. Therefore, there is an $\alpha$ probability that the $p$ value is rejected which means that the Type 1 error probability is $\alpha$.
+
+This also means that $p$ is a random variable which dispels the common mistake that the p-value is the probability of $H_{0}$ given the data because $p$ is not a constant. It represents the random variable of the probability that a test statistic at least as extreme as the observed data is reached.
+
+\medskip
+
+\noin (c) Repeat (a), except now letting the true mean be $\mu^* = 1$.
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+#set seed and generate data
+set.seed(111)
+reps <- 10^4
+n <- 10
+
+sim_p <- function(mu,sd){
+  data <- matrix(rnorm(reps * n, mean = mu, sd = sd), nrow = reps, ncol = n)
+  p <- apply(data, 1, function(x) {t.test(x)$p.value})
+  p
+}
+
+pvalues <- sim_p(1,1)
+
+hist(pvalues, freq = FALSE)
+```
+
+This graph is no longer uniform.
+
+\medskip
+
+\noin (d) Now suppose that we are testing \emph{many} different hypotheses, independently. For example, in computational biology it has become common to run thousands of simultaneous hypothesis tests, thus obtaining thousands of p-values.  Suppose that we are conducting one hypothesis test for each of $10^4$ genes. For the $j$th gene we have a dataset $Y_{j1},Y_{j2},\dots,Y_{jn} \sim \N(\mu_j,\sigma^2_j)$, where $\mu_j,\sigma_j$ are unknown and $n=10$, and we perform a t-test using this dataset. Assume that the $Y_{jk}$ are all independent.  Let the $j$th test be $H_0: \mu_j = 0$ vs. $H_1: \mu_j  \neq 0$. 
+
+\medskip
+
+\noin Suppose that for $90\%$ of the genes, the null hypothesis is true. For the other $10\%$ of the genes, the alternative hypothesis is true. The true SD is $1$ for all the genes. Simulate and plot a histogram of p-values for this setup, where for the genes where $H_1$ holds, the true $\mu_j$ are generated as i.i.d. $\Expo(1)$ draws. Explain why your histogram makes sense intuitively.
+
+```{r}
+#set seed and generate data
+set.seed(111)
+reps <- 10^4
+n <- 10
+percent_true <- 0.9
+pvalues_true <- rep(0,reps*percent_true)
+pvalues_false <- rep(0,reps * (1-percent_true))
+
+sim_p <- function(mu,sd){
+  data <- rnorm(n, mean = mu, sd = sd)
+  p <- t.test(data)$p.value
+  p
+}
+
+for(i in 1:reps * percent_true){
+  pvalues_true[i] <- sim_p(0,1)
+}
+
+for(i in 1:reps * (1-percent_true)){
+  pvalues_false[i] <- sim_p(rexp(1,rate = 1),1)
+}
+
+pvalues <- c(pvalues_true,pvalues_false)
+
+hist(pvalues, freq = TRUE, breaks = 25)
+```
+
+This data makes sense as there is a peak around the alternative hypothesis which predicts a p-value of under 0.05. The rest of the graph appears to be distributed normal which makes sense based off of the result in part (a).
+
+\medskip
+
+\noin (e) The article ``A peculiar prevalence of p values just below .05" (Masicampo and Lalande, \emph{Quarterly Journal of Experimental Psychology}, 2012), which is online at \newline \url{https://www.gwern.net/docs/statistics/bias/2012-masicampo.pdf}, \newline
+collected a total of 3,627 published p-values, from three psychology journals. Their dataset of p-values is in the file \texttt{pvalues.csv} on Canvas. Each column consists of the p-values gathered from one of the three journals: the PS column is for \emph{Psychological Science}, the JPSP column is for the \emph{Journal of Personality and Social Psychology}, and the JEPG column is for the \emph{Journal of Experimental Psychology: General}. 
+
+\medskip
+
+\noin The authors recorded the p-values in the range 0.01 to 0.10 from 12 issues of each journal. For each of the three journals, plot a histogram of the recorded p-values. Do you agree with the title of the article?
+
+\textbf{Solution:} The code to graph all the histograms is shown below.
+
+```{r}
+journal_pvalues <- read.csv("pvalues.csv")
+
+PS <- journal_pvalues$PS
+JPSP <- journal_pvalues$JPSP
+JEPG <- journal_pvalues$JEPG
+
+hist(PS, breaks = 50, xlab = "pvalue")
+hist(JPSP, breaks = 50, xlab = "pvalue")
+hist(JEPG, breaks = 50, xlab = "pvalue")
+```
+
+As seen, there is a drop off in each journal once $p>0.05$. This makes me inclined to believe the title of the article.
+
+\medskip
+
+\noin (f) One explanation that Masicampo and Lalande propose for the anomaly in the p-value distribution is \emph{publication bias} (also known as the \emph{file drawer problem}: some journals are much more likely to reject a manuscript if the main hypothesis being tested has a p-value greater than 0.05, and some researchers, knowing this, may not even bother to write up or submit a manuscript if the p-value is greater than 0.05. 
+
+\medskip
+
+\noin As a simple example to illustrate the impact of publication bias, continuing with the setup from (d), suppose that each of the $10^4$ hypothesis test results is reported in a separate manuscript, and that the manuscripts with p-values less than $0.05$ are all accepted for publication, whereas the manuscripts with p-values greater than or equal to 0.05 are accepted with probability $0.2$ and rejected with probability $0.8$, independently. Simulate the published p-values, and plot a histogram of the simulated published p-values that are in the range $[0.01,0.10]$.
+
+\textbf{Solution:} The code for plotting the histogram is shown below
+
+```{r}
+#set seed and generate data
+set.seed(111)
+reps <- 10^4
+n <- 10
+percent_true <- 0.9
+pvalues_true <- rep(0,reps*percent_true)
+pvalues_false <- rep(0,reps * (1-percent_true))
+
+sim_p <- function(mu,sd){
+  data <- rnorm(n, mean = mu, sd = sd)
+  p <- t.test(data)$p.value
+  p
+}
+
+for(i in 1:reps * percent_true){
+  pvalues_true[i] <- sim_p(0,1)
+}
+
+for(i in 1:reps * (1-percent_true)){
+  pvalues_false[i] <- sim_p(rexp(1,rate = 1),1)
+}
+
+pvalues <- c(pvalues_true,pvalues_false)
+
+#number of pvalues that are greater than 0.05
+greater <- length(pvalues[pvalues >= 0.05])
+
+#create an acceptance array for all the pvalues that are greater than 0.05. Accept will be 
+#1 while reject will be undefined.
+acceptance <- sample(c(1,NA), greater, replace = TRUE, prob=c(0.2,0.8))
+
+#Find the accepted pvalues by concatenating the list that is less than 0.05 with the product
+# of acceptance with greater
+accepted_pvalues <- c(pvalues[pvalues < 0.05], acceptance * pvalues[pvalues>=0.05])
+accepted_pvalues <- accepted_pvalues[!is.na(accepted_pvalues)]
+
+hist(accepted_pvalues, breaks = 50, main="Accepted p-values")
+```
+
+\bigskip
+
+\noin 3. You are working with a client who conjectures that the average  waiting time between when an airline passenger enters the security line and when the passenger departs security is \emph{not}  the reported average of 15 minutes on a non-holiday weekend day.   The client will collect waiting times for $n=10$ travelers, each on a different non-holiday weekend.  Model these  waiting times as i.i.d. $X_1,\ldots,X_n\sim \Expo(\lambda$), where $\lambda$ is the rate parameter. Suppose that you decide to use a likelihood ratio test of  $H_0:\lambda=\lambda_0$ vs. $H_1:\lambda \neq \lambda_0$, where $\lambda_0 = 1/15.$
+
+\medskip
+
+\noin (a) Derive the likelihood ratio test statistic.
+
+\textbf{Solution:} The likelihood ratio test statistic is calculated as shown below.
+
+$$
+LR(x)=\frac{L(\hat{\theta};x)}{L(\theta_{0};x)}
+$$
+
+
+We will begin by calculating the likelihood function for a exponential distribution. We have shown in class that the likelihood function for a Exponential function distributed $Expo(\theta)$ follows
+
+$$
+L(\lambda;x)=\prod_{i=1}^{n}\lambda e^{-\lambda x_{i}}=\lambda^{n}e^{-\lambda\sum_{i=1}^{n}x_{i}}
+$$
+
+Now, we will find $L(\hat{\lambda};x)$ and $L(\lambda_{0};x)$ as follows. We know that the exponential distribution is a NEF, so the MLE for the mean is $\bar{X}$. Invariance of the MLE gives $\hat{\lambda}=\frac{1}{\bar{X}}$. Plugging this in gives
+
+$$
+L(\hat{\lambda};x)=\bar{X}^{-n}e^{-\frac{1}{\bar{X}}\sum_{i=1}^{n}x_{i}}=\bar{X}^{-n}e^{-n}=(\bar{X}e)^{-n}
+$$
+
+Now, we need to find $L(\lambda_{0};x)$. We are given $\lambda_{0}=\frac{1}{15}$ in the problem. Therefore, we have
+
+$$
+L(\lambda_{0};x)=\lambda_{0}^{n}e^{-\lambda_{0}n\bar{X}}=(\frac{1}{\lambda_{0}}e^{\lambda_{0}\bar{X}})^{-n}
+$$
+
+Now, we take the ratio of these terms to get the likelihood ratio test statistic as follows.
+
+$$
+LR(y)=\frac{L(\hat{\lambda};x)}{L(\lambda_{0};x)}=\frac{(\bar{X}e)^{-n}}{(\frac{1}{\lambda_{0}}e^{\lambda_{0}\bar{X}})^{-n}}=(\lambda_{0}\bar{X}e^{1-\lambda_{0}\bar{X}})^{-n}
+$$
+
+\medskip
+
+\noin (b) Should the likelihood ratio test statistic have rejection region of the form $\{\bar{X} e^{-\lambda_0 \bar{X}}< c\}$  or of the form $\{\bar{X} e^{-\lambda_0 \bar{X}}> c\}$?
+
+\textbf{Solution:} We will first calculate $\Lambda(y)$ as defined in the Stat 111 textbook
+
+$$
+\Lambda(y)=2\ln(LR(y))=-2n\ln(\lambda_{0}\bar{X}e^{1-\lambda_{0}\bar{X}})
+$$
+
+We know from theorem 8.6.2 in the Stat 111 textbook that we will reject the null when
+
+$$
+\Lambda(y)>Q_{\chi_{1}^{2}}(1-\alpha)
+$$
+
+where $\alpha$ is a constant. Plugging in our value for $\Lambda(y)$ then gives
+
+$$
+2\ln(LR(y))=-2n\ln(\lambda_{0}\bar{X}e^{1-\lambda_{0}\bar{X}})>Q_{\chi_{1}^{2}}(1-\alpha)\implies \bar{X}e^{-\lambda_{0}\bar{X}}<\frac{1}{e\lambda}e^{-Q_{\chi_{1}^{2}}(1-\alpha)/(2n)}
+$$
+
+Everything on the right side of the inequality is a constant Therefore, setting $c=\frac{1}{e\lambda}e^{-Q_{\chi_{1}^{2}}(1-\alpha)/(2n)}$ makes the rejection criteria be in the form $\{\bar{X} e^{-\lambda_0 \bar{X}}< c\}$.
+
+\medskip
+
+\noin (c) In order to conduct the test, you need to calculate the appropriate value of $c$.  Let $\alpha = 0.05$.  Suppose for this part that, even though $n$ is not large, you decide to use the asymptotic result from  Theorem 8.6.2 from the notes. What does this give for the approximate value of $c$? 
+
+\textbf{Solution:} We will calculate our value of $c=\frac{1}{e\lambda_{0}}e^{-Q_{\chi_{1}^{2}}(1-\alpha)/(2n)}$ in part (b) with $n=10$ and $\lambda_{0}=\frac{1}{15}$. The code for this is shown below
+
+```{r}
+#set seed
+set.seed(111)
+n=10
+lambda = 1/15
+
+c <- (exp(-qchisq(0.95,1)/(2*n))) / (exp(1) * lambda)
+
+print(c)
+```
+
+Therefore, we have $c\approx 4.553869$
+
+\medskip
+
+\noin (d) The data are collected and it is observed that $\bar{X}=25.4$ minutes. Provide an approximate p-value, and advise the client on what to conclude.
+
+\textbf{Solution:} We will first calculate our $p$-value. To do so, we will use the fact that our $\Lambda(y)$ calculated in part $(b)$ is distributed chi-Squared with degerees of freedom 1. Our P value is then going to be $1-F(\Lambda(x))$. The calculation of this given $\bar{X}=25.4$ is shown below.
+
+```{r}
+set.seed(111)
+X <- 25.4
+n <- 10
+lambda <- 1/15
+
+Lambda_x <- -2*n*log(lambda * X * exp(1-(lambda * X)))
+
+p <- 1-pchisq(Lambda_x,1)
+
+print(p)
+```
+
+Therefore, our $p$ value is $p=0.06791583$.
+
+Now, we will plug in our given value of $\bar{X}$ into our rejection criteria calculated in part (b). This gives
+
+$$
+\bar{X}e^{-\lambda_{0}\bar{X}}=25.4e^{-\frac{25.4}{15}}\approx 4.671199
+$$
+
+This is larger than our $c$ value calculated in part (c), so I would advice the client to fail to reject the null hypothesis that $\lambda=\frac{1}{15}$
+
+\medskip
+
+\noin (e) It is not advisable to rely on asymptotics when the sample size is only $10$.  So suppose that you decide to use simulation rather than asymptotics to obtain $c$.  What is the approximate value of $c$? Is the conclusion different from that of the previous part? 
+
+\textbf{Solution:} We will simulate with $10^{4}$ trials. The code is shown below.
+
+```{r}
+set.seed(111)
+n <- 10
+lambda <- 1/15
+num_trials <- 10^4
+statistics <- rep(0,10^4)
+
+for (i in 1:num_trials){
+  sample <- rexp(n, rate=lambda)
+  X <- mean(sample)
+  statistic <- X * exp(-lambda * X)
+  statistics[i] <- statistic
+}
+
+c <- quantile(statistics,0.05)
+
+print(c)
+```
+
+Therefore, our simulated value of $c$ is approximately $4.542279$. This will not change our answer to part (d), as $4.671199$ is still greater than our new $c$ value.
+
+\bigskip
+
+\noin 4. Elk dwell in a certain forest. The number of elk, $N$, is unknown and of great interest to ecologists.
+A group of $t$ elk are captured, tagged, and then returned to the population (with $t$ known in advance).
+A new sample of size $m$ elk is then captured (with $m$ known in advance). Let $Y$ be the number of tagged elk in the new sample. Assume that the new sample is a \emph{simple random sample} of elk, i.e., all sets of $m$ elk are equally likely. 
+
+\medskip
+
+\noin (This assumption would not hold if, e.g., an elk who gets captured becomes more cautious and is less likely to be captured again. We also assume that no elk are born or die while the study is being conducted, so $N$ is regarded as a constant.) 
+
+
+\medskip
+
+\noin (a) An intuitively appealing approach to estimating $N$ is to set the proportion of tagged elk in the new \emph{sample} equal to the proportion of tagged elk in the \emph{population}: setting
+$$\frac{Y}{m} = \frac{t}{N}$$
+yields the estimator
+$$\hat{N} = \frac{tm}{Y}.$$
+Find the distribution of $Y$, and show that $\hat{N}$ is a method of moments estimator. (With some algebra that you don't have to do, it can be shown that the MLE is $\lfloor \hat{N} \rfloor$, which is the same as the MoM except rounded down to an integer because $N$ is an integer.)
+
+\textbf{Solution:} By the story of the hypergeometric distribution, we have
+
+$$
+Y\sim\mathrm{Hgeom}(t,N-t,m)
+$$
+
+To find the MoM estimator, we will set $E(Y)$ equal to the sample mean. As only one observation is made, the sample mean is just $Y$. This gives
+
+$$
+E(Y)=\frac{tm}{N}=Y\implies\hat{N}=\frac{tm}{Y}
+$$
+
+Therefore, our MoM estimator is $\hat{N}=\frac{tm}{Y}$.
+
+\medskip
+
+\noin (b)  Ecologists are concerned that the elk may be  endangered due to low population size. They come up with a value $N_0$ (before getting the data) such that they deem the elk population to be endangered if $N < N_0$. They decide to conduct a hypothesis test of  $H_0: N \geq N_0$ vs. $H_1: N < N_0$. Discuss whether it makes sense for them to set up a one-sided test in this way, rather than conducting a two-sided test ($H_0: N = N_0$ vs. $H_1: N \neq N_0$).
+
+It makes more sense to set up a one sided test. This is because in  a two sided test, we would only be able to reject a specific number of elk which has a very high chance of happening. Therefore, a two sided test would not tell the scientists very much information. It makes much more sense to set the $N_{0}$ at an endangerment threshold which would then make the null hyptoehsis when the elk are not endangered, and the alternate when they are endangered. This gives much more comprehensive information as to whether the elk are endangered or not.
+
+\medskip
+
+\noin (c) For level $\alpha = 0.05, N_0 = 500, t = 100, m = 50$, and using $Y$ itself as the test statistic, rejecting $H_0$ if $Y \geq c$, find the critical value $c$ for the hypothesis test from (b). 
+
+\textbf{Solution:} The test will reject $H_{0}$ if 
+
+$$
+P(Y\geq c|N)\leq \alpha
+$$
+
+for all $N\geq N_{0}$. As the probability only decreases as $N$ increases, all we need to find is the $c$ value such that
+
+$$
+P(Y\geq c|N_{0})\leq\alpha
+$$
+
+The code for calculating this value of $c$ is shown below.
+
+```{r}
+set.seed(111)
+
+N_0 <- 500
+t <- 100
+m <-50
+alpha <- 0.05
+
+#Note that we add 1 here as hypergeometric is discrete and we need
+#to ensure that the probability is less than alpha=0.05
+c <- 1+ qhyper(1-alpha,t,N_0-t,m)
+print(c)
+```
+
+Therefore, we have our critical value at $c=16$.
+
+\medskip
+
+\noin (d) Give two reasons why it is not possible in (c) to ensure that the probability of rejecting $H_0$, under the null, is equal to $\alpha$.
+
+\textbf{Solution:} One large reason is because the hypergeometric distribution is discrete. Because the PMF can only take on set values, it is very possible that our $\alpha$ value is not in this set of values, so it is impossible for the probability of rjecting $H_{0}$ to be exactly alpha. The other reason is that the null hypothesis has many different values as it is a one-sided test. Even if we have the exact $P(Y\geq c|N_{0})=\alpha$, there are other values of $N$ that make $P(Y\geq c|N)<\alpha$ which then makes our probability not equal to $\alpha$.
+
+\medskip
+
+\noin (e) Plot the power function $\beta(N)$ for the test from (c). Be sure to make reasonable choices for the ranges for the axes.
+
+\textbf{Solution:} The code for plotting the power function is shown below.
+
+```{r}
+set.seed(111)
+
+#initialize values with calculated numbers from part c
+c <- 16
+N <- c(100:700)
+t <- 100
+m <- 50
+
+#store power functions
+power <- 1 - phyper(c-1, t, N-t, m)
+plot(N, power, main = "Power function vs N", xlab = "N", ylab= "Power")
+```
+
+The reason why we only plot the values of $100$ to $700$ for $N$ is that there are 100 tagged elk, so we have to have $N\geq 100$. Power is always between $0$ and $1$ by definition.

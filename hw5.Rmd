@@ -1,0 +1,382 @@
+---
+title: "Stat 111 Homework 5, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 3/3 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\noin Please show your work, simplify fully, and give clear, careful justifications for your answers (using *words and sentences* to explain your logic, in addition to the relevant mathematical expressions and/or code). When code is used, both the *outputs* (such as plots and summary statistics) and the *code* must be included in your submission.
+
+\bigskip
+
+
+\noin 1. So far with interval estimation we have focused on confidence intervals for a \emph{parameter}. But recall that one of the main goals of statistics is \emph{prediction}. In this problem we will explore methods for creating an interval for predicting a future observation. 
+
+\medskip
+
+\noin Let $Y_1,Y_2,\dots$ be i.i.d. continuous r.v.s. We observe $Y_1,Y_2,\dots,Y_n$, and based on these data want to predict the next data point, $Y_{n+1}$. The goal is to create an interval $[L,U]$, with $L$ and $U$ functions of $Y_1,\dots,Y_n$, such that
+$$ P( L \leq Y_{n+1} \leq U) = 0.95.$$ 
+
+\noin (a) First let's consider a nonparametric approach. For fixed $j$ and $k$ with $j \leq k$, find
+$$ P( Y_{(j)} \leq Y_{n+1} \leq Y_{(k)}).$$ Use the result to create such an interval $[L,U]$ for  $Y_{n+1}$, for  $n = 99$. 
+
+\smallskip
+
+\noin Hint: By symmetry, all orderings of $Y_1,Y_2,\dots,Y_{n+1}$ are equally likely. 
+
+\textbf{Solution:} Without loss of generality, suppose that $Y_{1},Y_{2},\dots,Y_{n}$ crystalize to $Y_{i}=Y_{(i)}$ for $i\in\{1,2,\dots,n\}$ such that $Y_{(1)}\leq Y_{(2)}\leq<\cdots\leq Y_{(n)}$. Then, there are $n+1$ spots for $Y_{n+1}$ to be inserted with equal probability. The probability that $Y_{(i)}\leq Y_{n+1}\leq Y_{(j)}$ is then $\frac{j-i}{n+1}$. Therefore, we conclude that $P(Y_{(j)}\leq Y_{n+1}\leq Y_{(k)})=\frac{j-i}{n+1}$.
+
+We will now use this information to calculate a $95%$ CI when $n=99$ for $Y_{100}$. Plugging in $n=99$ into our calculated probability gives $P(Y_{(j)}\leq Y_{100}\leq Y_{(k)})=\frac{j-i}{100}$. Therefore, picking any $j-i=95$ will satisfy our CI. We will choose $[Y_{3},Y_{98}]$ for our CI.
+
+\medskip
+
+\noin (b) Create an approximate interval $[L,U]$ for  $Y_{n+1}$, in terms of the empirical CDF of $Y_1,\dots,Y_n$. 
+
+\textbf{Solution:} We will construct a quantile function in terms of the ECDF $\hat{F}(y)$. We know that the $ECDF$ is defined as $\hat{F}(y)=\frac{1}{n}\sum_{i=1}^{n}I(y_{i}<y)$ where $Y_{i}=y_{i}$ for each $i\in\{1,2,\dots,n\}$. Therefore, our sample quantile function is $\hat{Q}(p)=\min\{y:\hat{F}(y)\geq p\}$. We then use this to create the approximate interval $[\hat{Q}(0.0025),\hat{Q}(0.9975)]$ for $Y_{n+1}$ in terms of the ECDF.
+
+\medskip
+
+\noin (c) For the rest of this problem, assume a model with $Y_j \sim \N(\mu,\sigma^2)$. Suppose for this part that $\mu$ is unknown but $\sigma^2$ is known. Let $\bar{Y}_n$ be the sample mean based on $Y_1,\dots,Y_n$. Create such an interval $[L,U]$ for  $Y_{n+1}$, centered at $\bar{Y}_n$. Your answer can be in terms of the $\mathcal{N}(0,1)$ quantile function.
+
+\smallskip
+
+\noin Hint: Start by finding the distribution of $Y_{n+1} - \bar{Y}_n$. 
+
+\textbf{Solution:} We know that each $Y_{i}$ is i.i.d. and distributed $\mathcal{N}(\mu,\sigma^{2})$. By properties of sum of independent normals, we have
+
+$$
+\sum_{i=1}^{n}Y_{i}\sim\mathcal{N}(n\mu,n\sigma^{2})
+$$
+
+We divide by $n$ on both sides to get the sample mean
+
+$$
+\frac{1}{n}\sum_{i=1}^{n}Y_{i}=\bar{Y}\sim\mathcal{N}(\mu,\frac{\sigma^{2}}{n})
+$$
+
+We then use the fact that $Y_{n+1}$ is also independently normal to write
+
+$$
+Y_{n+1}-\bar{Y}\sim \mathcal{N}(0,\frac{n+1}{n}\sigma^{2})
+$$
+
+We then normalize this to get
+
+$$
+(Y_{n+1}-\bar{Y})\sqrt{\frac{n}{n+1}}\frac{1}{\sigma}\sim\mathcal{N}(0,1)
+$$
+
+We will now use $(Y_{n+1}-\bar{Y})\sqrt{\frac{n}{n+1}}\frac{1}{\sigma}$ as our pivot to construct our CI. As we know our pivot is distrbuted standard normal, we have
+
+$$
+P(Q(0.0025)<(Y_{n+1}-\bar{Y})\sqrt{\frac{n}{n+1}}\frac{1}{\sigma}<Q(0.9975))=0.95
+$$
+
+where $Q$ is the quantile function of the standard normal distribution. We then do the following manipulations to get our final confidence interval.
+
+$$
+P(Q(0.0025)\sigma\sqrt{\frac{n+1}{n}}<Y_{n+1}-\bar{Y}<Q(0.9975)\sigma\sqrt{\frac{n+1}{n}})=0.95
+$$
+$$
+P(Q(0.0025)\sigma\sqrt{\frac{n+1}{n}}+\bar{Y}<Y_{n+1}<Q(0.9975)\sigma\sqrt{\frac{n+1}{n}}+\bar{Y})=0.95
+$$
+
+Therefore, our confidence interval is $[P(Q(0.0025)\sigma\sqrt{\frac{n+1}{n}}+\bar{Y},Q(0.9975)\sigma\sqrt{\frac{n+1}{n}}+\bar{Y}]$.
+
+\medskip
+
+\noin (d) Give an intuitive explanation for why the interval from (c) is wider than the standard 95\% confidence interval for $\mu$ in this setting, $\bar{Y}_n \pm c \sigma/\sqrt{n}$, where $c \approx 1.96$ is the $0.975$ quantile of the $\mathcal{N}(0,1)$ distribution. 
+
+\textbf{Solution:} This is wider than a standard $95%$ CI for $\mu$ as we do not know the true $\mu$ for our observed data $Y_{1},\dots,Y_{n}$ as well as for our new data point $Y_{n+1}$. We can also see that our variance is greater for our pivot which is $\frac{n+1}{n}\sigma^{2}$ as opposed to just $\sigma^{2}$ which means there is more uncertanty in our estimate.
+
+\medskip
+
+\noin (e) Now let both $\mu$ and $\sigma^2$ be unknown. Create such an interval $[L,U]$ for  $Y_{n+1}$, centered at $\bar{Y}_n$. Your answer can be in terms of the quantile function of a named distribution.
+
+\smallskip
+
+\noin Hint: Let $S^2$ be  the unbiased sample variance, and find the distribution of $$ \frac{Y_{n+1} - \bar{Y}_n}{S \sqrt{1+1/n}}.$$ 
+
+\textbf{Solution:} We have already show that 
+
+$$
+\frac{Y_{n+1} - \bar{Y}_n}{\sigma \sqrt{1+1/n}}=(Y_{n+1}-\bar{Y})\frac{1}{\sigma}\sqrt{\frac{n}{n+1}}\sim\mathcal{N}(0,1)
+$$
+
+in part (c). We also know that 
+
+$$
+\frac{(n-1)s^{2}}{\sigma^{2}}\sim\chi_{n-1}^{2}
+$$
+
+by 5.4.2 in the Stat 111 textbook. We also know that $\frac{(n-1)s^{2}}{\sigma^{2}}$ and $\frac{Y_{n+1} - \bar{Y}_n}{\sigma \sqrt{1+1/n}}$ are independent from 7.5.9 in the Stat 110 textbook. Therefore, we have
+
+$$
+\frac{\frac{Y_{n+1} - \bar{Y}_n}{\sigma \sqrt{1+1/n}}}{\sqrt{\frac{1}{n-1}\frac{(n-1)s^{2}}{\sigma^{2}}}}=\frac{Y_{n+1} - \bar{Y}_n}{S \sqrt{1+1/n}}\sim t_{n-1}
+$$
+
+Now we will use this as our pivot with $Q$ defined as the quantile function for the $t_{n-1}$ distribution. We then do the following calculations.
+
+$$
+P(Q(0.0025)<\frac{Y_{n+1}-\bar{Y}}{S\sqrt{1+\frac{1}{n}}}<Q(0.9975))=0.95
+$$
+
+$$
+P(Q(0.0025)S\sqrt{1+\frac{1}{n}}<Y_{n+1}-\bar{Y}<Q(0.9975)S\sqrt{1+\frac{1}{n}})=0.95
+$$
+
+$$
+P(Q(0.0025)S\sqrt{1+\frac{1}{n}}+\bar{Y}<Y_{n+1}<Q(0.9975)S\sqrt{1+\frac{1}{n}}+\bar{Y})=0.95
+$$
+
+Therefore, we conclude that our CI is $[Q(0.0025)S\sqrt{1+\frac{1}{n}}+\bar{Y},Q(0.9975)S\sqrt{1+\frac{1}{n}}+\bar{Y}]$
+\bigskip
+
+\noin 2. Two teams, Team A and Team B, are going to play a best-of-3 match for the world championship of some sport. For each individual game, the probability is $p$ that Team A will win and $q = 1 - p$ that Team B will win, with $p$ unknown. The games are independent. 
+
+\medskip
+
+\noin Lucy is considering buying a ticket for game 3. There may not \emph{be} a game 3 though, and the ticket is nonrefundable. So she wants to estimate the probability that there will be a game 3. Therefore, the estimand is 
+$$ \theta = P(\textrm{match tied after 2 games}) = 2 pq.$$
+The teams have played against each other $n$ times recently, with $n \geq 3$ (assume that the team strengths have not changed since then). The data are i.i.d. $Y_1,Y_2,\dots,Y_n \sim \Bern(p)$, where $Y_j$ is the indicator of Team A winning the $j$th game (from the $n$ earlier games). 
+
+\medskip
+
+\noin (a) Find the MLE $\hat{\theta}_{\textrm{MLE}}$ of $\theta$.
+
+\textbf{Solution:} We will begin with finding the MLE of $p$. As we have $Y_{1},Y_{2},\dots,Y_{n}\sim\Bern(p)$, our likelihood function is 
+
+$$
+L(p;y_{1},\dots,y_{n})=\prod_{i=1}^{n}p^{y_{i}}(1-p)^{1-y_{i}}
+$$
+
+Our log likelihood is then
+
+$$
+\ell(p;y_{1},\dots,y_{n})=\ln p\sum_{i=1}^{n}y_{i}+\ln(1-p)\sum_{i=1}^{n}(1-y_{i})
+$$
+
+Note that this gives us our sufficient statistic of $T=\sum_{i=1}^{n}Y_{i}$. Finding the score function and setting it equal to zero gives
+
+$$
+s(p;y_{1},\dots,y_{n})=\frac{1}{p}\sum_{i=1}^{n}y_{i}-\frac{1}{1-p}(n-\sum_{i=1}^{n}y_{i})=0\implies n=\frac{1}{p}\sum_{i=1}^{n}y_{i}\implies p=\frac{1}{n}\sum_{i=1}^{n}
+$$
+
+Therefore, we have our $\hat{p}_{MLE}=\bar{Y}$. As we know that $\theta=2p(1-p)$, we use invarience of the MLE to get $\hat{\theta}_{MLE}=2(\hat{p}_{MLE})(1-\hat{p}_{MLE})=2(\bar{Y})(1-\bar{Y})$.
+
+\medskip
+
+\noin (b) Find the bias of $\hat{\theta}_{\textrm{MLE}}$.
+
+\textbf{Solution:} By definition of biase, we have
+
+$$
+\mathrm{Bias}(\hat{\theta}_{MLE})=E(\hat{\theta}_{MLE})-\theta
+$$
+
+Plugging in our calculated MLE from (a) and using linearity of expectation allows us to write
+
+$$
+E(2(\bar{Y})(1-\bar{Y}))-\theta=2E(\bar{Y})-2E(\bar{Y}^{2})-\theta=2E(\hat{Y})-2(\var(\bar{Y})+E(\bar{Y})^{2})-\theta
+$$
+
+We know by linearity, symmetry, and fundamental bridge that
+
+$$
+E(\bar{Y})=\frac{1}{n}E(\sum_{i=1}^{n}Y_{i})=\frac{1}{n}nE(Y_{1})=P(Y_{1}=1)=p
+$$
+
+We also know that $\var(\bar{Y})$ can be calculated as follows by independence and varience of a Bernouli random variable
+
+$$
+\var(\bar{Y})=\frac{1}{n^{2}}n\var(Y_{1})=\frac{p(1-p)}{n}
+$$
+
+Plugging these values for varience and expectation back into the biase equation gives
+
+$$
+2E(\hat{Y})-2(\var(\bar{Y})+E(\bar{Y})^{2})-\theta=2p-2(\frac{p(1-p)}{n}+p^{2})-\theta
+$$
+
+Plugging in $\theta=2p(1-p)$ and simplifying yields
+
+$$
+2p(1-p)-\frac{2p(1-p)}{n}-2p(1-p)=-\frac{2p(1-p)}{n}
+$$
+
+Therefore, our bias of $\hat{\theta}_{MLE}$ is $-\frac{2p(1-p)}{n}$
+
+\medskip
+
+\noin (c) Briefly explain why Rao-Blackwellizing $\hat{\theta}_{\textrm{MLE}}$ would have no effect. 
+
+\textbf{Solution:} Our calculation of $\hat{\theta}_{MLE}$ already used the sufficient statistic (in this case, it is $\sum_{i=1}^{n}y_{i}$). Therefore, Rao-Blackwellizing $\hat{theta}_{\textrm{MLE}}$ will just give the same estimator which has no effect.
+
+\medskip
+
+\noin (d) Find a simple but silly unbiased estimator $\hat{\theta}_{\textrm{silly}}$ of $\theta$, based only on $Y_1,Y_2$ (simple in that it's easy to calculate, but silly in that it throws away all but the first two data points).
+
+\textbf{Solution:} We will define $\hat{\theta}_{silly}=2(Y_{1})(1-Y_{2})$. We will now show that it is umbiased. By linearity, we have
+
+$$
+E(\hat{\theta}_{silly})=2E(Y_{1})-2E(Y_{1}Y_{2})
+$$
+
+By fundamental bridge, we have $E(Y_{1})=P(Y_{1}=1)=p$. We also know by fundamental bridge that $E(Y_{1}Y_{2})=E(I(Y_{1}Y_{2}))=P(Y_{1}Y_{2}=1)=p^{2}$. PLugging these values in gives
+
+$$
+E(\hat{\theta}_{silly})=2p-2p^{2}=2p(1-p)
+$$
+
+As this is the same as $\theta$, we conclude that 
+
+$$
+\mathrm{Bias}(\hat{\theta}_{silly})=E(\hat{\theta}_{silly})-\theta=0
+$$
+
+which proves that $\hat{\theta}_{silly}$ is unbiased.
+
+\medskip
+
+\noin (e) Use Rao-Blackwellization to improve the estimator from (d), obtaining an unbiased estimator $\hat{\theta}_{\textrm{RB}}$ that is better (in terms of MSE) than the estimator from (d).
+
+\smallskip
+
+\noin Hint: Use the fundamental bridge to interpret a conditional expectation as a conditional probability. For the conditional probability, imagine that there are $n$ red balls and that you randomly select $k$ balls (one at a time, without replacement, with $k$ fixed) and paint the selected balls green.
+
+\textbf{Solution:} We know that our sufficient statistic is $T=\sum_{i=1}^{n}Y_{i}$ as calculated in part (a). Then, we have $\hat{\theta_{RB}}=E(\hat{\theta}_{silly}|T)$. Using fundamental bridge, we can write this as
+
+$$
+\hat{\theta}_{RB}=E(2Y_{1}(1-Y_{2})|T)=P(Y_{1}=1,Y_{2}=0|T)
+$$
+
+We know this is true as the only way for $2Y_{1}(1-Y_{2})=1$ to occur is if $Y_{1}=1$ and $Y_{2}=0$. We know that there are $T$ successes, $n-T$ failures, and $n$ total games. Therefore, we know that 
+
+$$
+P(Y_{1}=0,Y_{2}=0|T)=\frac{T}{n}\cdot\frac{n-T}{n-1}
+$$
+We will now check the MSE of $\hat{\theta}_{RB}$ to verify that it is a better estimator than $\hat{\theta}_{silly}$. We know that bias does not chance after Rao-Blackwellization, so we only need to check the variance of the new estimator. We do so by noting that
+
+$$
+\var{\hat{\theta}_{silly}}=E(\var(\hat{\theta}_{silly}|T))+\var(E(\hat{\theta}_{silly}|T))=E(\var(\hat{\theta}_{silly}|T))+\var(\hat{\theta}_{RB})
+$$
+
+Therefore, we only need to check that $E(\var(\hat{\theta}_{silly}|T))>0$. We know that variance is always nonnegative by definition. We also know that 
+$\hat{\theta}_{silly}$ is not completely determined by $T$, so we know that the varience is positive. Therefore, $E(\var(\hat{\theta}_{silly}|T))>0$ which means that $\var(\hat{\theta}_{RB})<\var(\hat{\theta}_{silly})$ as desired.
+
+Therefore, we conclude that $\hat{\theta}_{RB}=\frac{T(n-T)}{n(n-1)}$ is a better estimator for $\hat{\theta}_{silly}$.
+\bigskip
+
+\noin 3. Suppose that we observe i.i.d. Negative Binomial r.v.s $Y_1,\dots,Y_n$ with parameters $r$ and $p$, where $r$ is a known positive integer and $p$ is unknown. So the PMF of $Y_j$ is
+$$P(Y_j =  y) = {r+y-1 \choose r-1} p^r (1-p)^{y},$$ for $y=0,1,2,\dots$. 
+
+\medskip
+
+\noin (a) Show that this model is a natural exponential family.
+
+\textbf{Solution:} We want to show that this model follows $f(y;\theta)=e^{\theta y-\psi(\theta)}h(y)$.
+
+From the Negative Binomial distribution, we know that the PMF of $Y_{j}$ is 
+
+$$
+P(Y_j =  y) = {r+y-1 \choose r-1} p^r (1-p)^{y}
+$$
+
+Then, we know that $f(y;\theta)=\binom{r+y-1}{r-1}p^{r}(1-p)^{y}$. We can use log rules to write this as
+
+$$
+f(y;\theta)=\binom{r+y-1}{r-1}e^{\ln(p^{r}(1-p)^{y})}=\binom{r+y-1}{r-1}e^{r\ln(p)+y\ln(1-p)}
+$$
+
+We need $h(y)$ to be a PMF, so we rewrite this as 
+
+$$
+f(y;\theta)=\binom{r+y-1}{r-1}e^{\ln(p^{r}(1-p)^{y})}=\binom{r+y-1}{r-1}(\frac{1}{2})^{r+y}e^{r\ln(2p)+y\ln(2-2p)}
+$$
+
+Now we can pattern match by setting $\theta=\ln(2-2p)$. This means that $r\ln(2p)=-\psi(\theta)$ which means that $\psi(\theta)=-r\ln(2-(2-2p))=-r\ln(1-e^{\theta})$. Substituting htese values in lets us write
+
+$$
+f(y;\theta)=\binom{r+y-1}{r-1}e^{\ln(p^{r}(1-p)^{y})}=\binom{r+y-1}{r-1}(\frac{1}{2})^{r+y}e^{-\psi(\theta)+y\theta}
+$$
+
+Therefore, we conclude that this model is a natural exponential family with $\theta=\ln(2-2p)$, $\psi(\theta)=-r\ln(1-e^{\theta})$, and $h(y)=\binom{r+y-1}{r-1}(\frac{1}{2})^{r+y}$
+\medskip
+
+\noin (b) We know from Stat 110 that $\textrm{E}[Y_j] = rq/p$ and $\var(Y_j) = rq/p^2$, where $q=1-p$. Show that the same results follow from the general method (discussed in class) for obtaining the mean and variance of a random variable that follows a natural exponential family.
+
+\textbf{Solution:} We know that the mean and variance are the first derivative of $\psi(\theta)$ respectively. Plugging in the values of $\psi(\theta)$ and $\theta$ into these derivatives gives
+
+$$
+E(Y_{j})=\psi'(\theta)=\frac{re^{\theta}}{2-e^{\theta}}=\frac{r(2-2p)}{2-(2-2p)}=\frac{r(1-p)}{p}
+$$
+$$
+\var(Y_{j})=\psi''(\theta)=\frac{(2-e^{\theta})re^{\theta}+re^{2\theta}}{(2-e^{\theta})^{2}}=\frac{2r(2-2p)}{4p^{2}}=\frac{r(1-p)}{p^{2}}
+$$
+\medskip
+
+\noin (c) It follows from (a) that $\bar{Y}$ is a sufficient statistic. Check this directly using the factorization criterion. 
+
+\textbf{Solution:} We have $P(Y_{i}=y_{i})=e^{\theta y_{i}-\psi(\theta)}h(y)$ with the defined $\theta$ and $\psi(\theta)$ found in part (a). Then, it follows that $f(\vec{y};\theta)=e^{\theta\sum_{i=1}^{n}y_{i}-n\psi(\theta)}h(y)^{n}$. We know this is valid as each $Y_{i}$ is independent so we can multiply them together to get the joint PMF. The factorization criterion states that $e^{\theta\sum_{i=1}^{n}y_{i}-n\psi(\theta)}$ needs to be in terms of $\theta$ and the sufficient statistic. Once $\theta$ is fixed, the only term that can change is $\sum_{i=1}^{n}y_{i}$. Therefore, setting $T=\bar{Y}$ lets us write $g(T(Y),\theta)=e^{n\theta\bar{Y}-n\psi(\theta)}$ as desired. Therefore, we conclude that $\bar{Y}$ is the sufficient statistic found from the factorization criterion.
+
+\medskip
+
+\noin (d) Suppose that $r=3, n=5$, and the data are $(y_1,y_2,y_3,y_4,y_5)  = (11,3,10,5,6)$. Find the maximum likelihood estimate for $p$ in two different ways, \emph{without using calculus}: using facts about exponential families, and by recognizing that the likelihood function is equivalent to one that could have come from a different model that we are very familiar with.
+
+\textbf{Solution:} We will first use facts about exponential families. We know that the true mean is $\mu$, and $\mu=\frac{r(1-p)}{p}$ from part (b). Then, we use invariance of the MLE to get $\hat{mu}=\frac{r(1-\hat{p})}{\hat{p}}$. We know that $\hat{\mu}=\bar{Y}=7$ from the given data. Plugging this in with $r=3$ and solving for $\hat{p}$ gives
+
+$$
+7=\frac{3-3\hat{p}}{\hat{p}}\implies\hat{p}=\frac{3}{10}
+$$
+
+We will now use a named distribution. Our likelihood function for our data is as follows
+
+$$
+L(p;\vec{y})=\binom{13}{2}p^{3}(1-p)^{11}\binom{5}{2}p^{3}(1-p)^{3}\binom{12}{2}p^{3}(1-p)^{10}\binom{7}{2}p^{3}(1-p)^{5}\binom{8}{2}p^{3}(1-p)^{6}
+$$
+
+Dropping the binomial coefficients and combining terms gives
+
+$$
+L(p;\vec{y})=p^{15}(1-p)^{35}
+$$
+
+This is the MLE of a binomial random variable distributed $\Bin(50,p)$. We know that the MLE of a binomial random variable is $\hat{p}=\frac{y}{n}=\frac{15}{50}=\frac{3}{10}$.
+
+Both methods obtained the same MLE $\hat{p}=\frac{3}{10}$.

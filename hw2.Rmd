@@ -1,0 +1,705 @@
+---
+title: "Stat 111 Homework 2, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+**Due**: Friday 2/10 at 5:00 pm, submitted as a PDF via Gradescope. Make
+sure to assign to each question all the pages with your work on that
+question (*including code*). You can assign multiple pages to the same
+question, or the same page to multiple questions. After submitting your
+homework, *check your submission* to make sure everything you want
+graded is present, easily legible, and correctly assigned. No
+submissions on paper or by email will be accepted, and no extensions
+will be granted aside from the Monday extensions described in the
+syllabus.
+
+\noin Please show your work, simplify fully, and give clear, careful
+justifications for your answers (using *words and sentences* to explain
+your logic, in addition to the relevant mathematical expressions and/or
+code). When code is used, both the *outputs* (such as plots and summary
+statistics) and the *code* must be included in your submission.
+
+\bigskip
+
+\noin 1. The dataset \texttt{population.csv} has the estimated
+populations for approximately 21,000 cities, towns, and other
+\`\`incorporated places" in the US, according to the 2020 US Census. The
+dataset \texttt{stars.csv} has information about approximately 110,000
+stars. The stars dataset is from \url{http://www.astronexus.com/hyg}
+(this site has much more information about what is included in the
+dataset and how it was constructed). The datasets can be found on Canvas
+under
+\href{https://canvas.harvard.edu/courses/119000/files/folder/Data}{Data}.
+
+\medskip
+
+\noindent The \emph{first digit} of a positive number is the leftmost
+nonzero digit, e.g., the first digit of 314.16 is 3. This problem is
+about the distribution of the first digit of a variable in a dataset.
+For the population data, we are interested in the variable called
+\texttt{population}. For the stellar data, we are interested in
+\texttt{dist}, which gives the estimated distance from the Sun to the
+star (in parsecs). Of course, the distance from the Sun to itself is
+$0$, so ignore that row of the data.
+
+\medskip
+
+\noin (a) Without doing any calculations or even looking closely at the
+data yet, \emph{guess} what the probability is that the first digit is
+$1$ for the population of a randomly chosen place in
+\texttt{population.csv}. Likewise, \emph{guess} the probability that the
+first digit is $1$ for the distance (in parsecs) from the Sun to a
+randomly chosen star from \texttt{stars.csv}.
+
+Solution: We will use the naive definition of probability to estimate
+the probability that the first digit is $1$. There are 9 possible first
+digit choices, so our guess is $\frac{1}{9}$.
+
+\medskip
+
+\noin (b) For the \texttt{population.csv} data, plot a histogram of the
+first digit of the population of a randomly chosen place, with $9$ bars
+(one for each possible first digit).
+
+Solution:
+
+```{r}
+#import dataset
+library(readr)
+population <- read_csv("C:/Users/Ethan/Downloads/population.csv")
+#Get first digit of populations
+library(stringr)
+first_digits <- str_extract(population$population, "^\\d{1}")
+first_digits <- strtoi(first_digits)
+#plot histogram
+hist(first_digits, xlab="First Digit", main="Probability of Each First
+     Digit",breaks=seq(0,9,1), freq = F)
+```
+
+\medskip
+
+\noin (c) Repeat (b) with the \texttt{stars.csv} data, with the distance
+from the Sun to a random star.
+
+Solution:
+
+```{r}
+#import dataset
+library(readr)
+stars <- read_csv("C:/Users/Ethan/Downloads/stars.csv")
+#Get first digit of populations
+library(stringr)
+first_digits <- str_extract(stars$dist, "^\\d{1}")
+first_digits <- strtoi(first_digits)
+#plot histogram
+hist(first_digits, xlab="First Digit", main="Probability of Each First
+     Digit",breaks=seq(0,9,1), freq = F)
+```
+
+\medskip
+
+\noin (d) A random variable $D$ has the \emph{Benford} distribution if
+$$P(D = d) = \log_{10} \left(\frac{d+1}{d}\right), \textrm{ for } d \in \{1,2,\dots,9\}.$$
+Check analytically that this PMF is valid. Then plot the PMF and compare
+it with the histograms from (b) and (c).
+
+Solution: We will check that this PMF is valid by showing that it is
+non-negative and that the summation over its support is equal to 1. We
+know that for all $d\in\{1,2,\dots,9\}$, we have $\frac{d+1}{d}>1$.
+Therefore, we know that $\log_{10}\frac{d+1}{d}>0$ which proves
+non-negativity. By log properties, we can write
+
+$$
+\sum_{d=1}^{9}P(D=d)=\log_{10}\prod_{d=1}^{9}\frac{d+1}{d}=\log_{10}\frac{10}{1}=1
+$$
+
+Therefore, we conclude that this PMF is valid. A plot for this PMF is
+shown below.
+
+```{r}
+#initialize values
+x <- 1:9
+y <- log10((x+1)/x)
+plot(x, y, xlab="Digit", ylab="probability", main="PMF Values at all Support
+     Values")
+```
+
+As seen, the values match up with the histograms plotted in parts (b)
+and (c).
+
+\medskip
+
+\noin (e) The distance in \texttt{stars.csv} was measured in parsecs.
+Suppose now that we wanted to use light years instead. The conversion is
+that $1$ parsec is approximately $3.26156$ light years. Repeat (c),
+except now with light years instead of parsecs as the unit of
+measurement. Again compare the histogram with the PMF from (d).
+
+Solution: The code and histogram are shown below
+
+```{r}
+#import dataset
+library(readr)
+stars <- read_csv("C:/Users/Ethan/Downloads/stars.csv")
+#Get first digit of populations
+library(stringr)
+parsecs = stars$dist * 3.26156
+first_digits <- str_extract(parsecs, "^\\d{1}")
+first_digits <- strtoi(first_digits)
+#plot histogram
+hist(first_digits, xlab="First Digit", main="Probability of Each First Digit
+     of Parsecs",breaks=seq(0,9,1), freq = F)
+```
+
+These probabilities also match up with our plotted PMF in part (d).
+
+\medskip
+
+\noin (f) We will observe i.i.d. first digits $D_1,\dots, D_n$ of some
+variable. Let
+$$p_i  = P(D_1 = i),  \textrm{ for } i \in \{1,2,\dots,9\}.$$ Let
+$$N_i = \sum_{j=1}^n I(D_j = i).$$ Let $d_j$ be the observed value of
+$D_j$, and $n_i$ be the observed value of $N_i$. Find the likelihood
+function $L( p_1,\dots,p_8).$ (We go up to $p_8$ rather than $p_9$ in
+the list of parameters since if we knew $p_1,\dots,p_8$, then we would
+know $p_9$.)
+
+Solution: Our likelihood function is as follows:
+
+$$
+L(p_{1},\dots,p_{8})=(1-p_{1}-p_{2}-\cdots-p_{8})^{n-n_{1}-\cdots-n_{8}}\prod_{j=1}^{8}p_{j}^{n_{j}}
+$$ 
+
+Note that the term $(1-p_{1}-p_{2}-\cdots-p_{8})^{n-n_{1}-\cdots-n_{8}}$ is in front due to the requirement of there being $n_{9}=n-n_{1}-\cdots-n_{2}$ digits with value of 9. Further note that there are no binomial coefficients as those are multiplicative constants and can be dropped.
+
+\medskip
+
+\noin (g) Continuing (f), let
+$$\hat{p}_i = \frac{N_i}{n}, \textrm{ for $i=1,2,\dots,9,$}$$ be our
+estimator for $p_i$. Find the bias, standard error, and MSE of
+$\hat{p}_i$.
+
+Solution: We will first calculate the bias of the estimator. For each
+$p_{i}$, we have
+$\mathrm{Bias}(\hat{p_{i}})=E(\hat{p_{i}})-p_{i}=\frac{np_{i}}{n}-p_{i}=0$
+so we conclude that $\hat{p_{i}}=\frac{N_{i}}{n}$ is an unbiased
+estimator for $p_{i}$.
+
+We will now calculate variance. For each $p_{i}$, we have
+
+$$
+\mathrm{Var}(\hat{p_{i}})=E(p_{i}^{2})-E(p_{i})^{2}=\frac{1}{n^{2}}E(N_{i}^{2})+\frac{1}{n^{2}}E(N_{i})^{2}
+$$
+
+Using the fact that $N_{i}\sim\mathrm{Bin}(n,p_{i})$, we know that
+$E(N_{i}^{2})=n(n-1)p^{2}+np$ to write
+
+$$
+\mathrm{Var}(\hat{p_{i}})=\frac{n(n-1)p_{i}^{2}+np_{i}}{n^{2}}+p_{i}^{2}=\frac{p_{i}(1-p_{i})}{n}
+$$
+
+Then, we use the fact that
+$SE(\hat{p_{i}})=\sqrt{\mathrm{Var}(\hat{p_{i}})}$ to write
+
+$$
+SE(\hat{p_{i}})=\sqrt{\frac{p_{i}(1-p_{i})}{n}}
+$$
+
+As our estimator is unbiased, the MSE is just the varience. Therefore,
+we have
+
+$$
+MSE(\hat{p_{i}})=\frac{p_{i}(1-p_{i})}{n}
+$$
+
+\medskip
+
+\noin (h) Continuing (g), suppose that our estimand is
+$\theta = p_1 - p_2$. For example, if all possible first digits are
+equally likely then $\theta = 0$, whereas if the first digit follows the
+Benford distribution then $\theta \approx 0.125$. Putting hats on, let's
+use $\hat{\theta} = \hat{p}_1 - \hat{p}_2$ as our estimator. Find the
+bias, standard error, and MSE of $\hat{\theta}$.
+
+\smallskip
+
+\noin Hint: What is the name of the distribution of
+$(N_1,N_2,\dots,N_9)$?
+
+We will begin with calculating the bias. The calculations are as follows
+
+$$
+\mathrm{Bias}(\hat{\theta})=E(\hat{\theta})-(p_{1}-p_{2})=E(\hat{p_{1}})-E(\hat{p_{2}})-(p_{1}-p_{2})=0
+$$
+
+Therefore, we know that $\hat{\theta}$ is an unbiased estimator.
+
+We will now calculate variance. Plugging in our estimator
+$\hat{\theta}=p_{1}-p_{2}$ and using linearity of expectation gives
+
+$$
+\mathrm{Var}(\hat{\theta})=E(\hat{\theta}^{2})-E(\hat{\theta})^{2}=E(\hat{p_{1}^{2}})-2E(\hat{p_{1}}\hat{p_{2}})+E(\hat{p_{2}^{2}})-(p_{1}-p_{2})^{2}
+$$
+
+We can substitute our values for $E(\hat{p_{1}}^{2})$ from part (g) to
+write
+
+$$
+\mathrm{Var}(\hat{\theta})=\frac{p_{1}(1-p_{1})}{n}+p_{1}^{2}-2E(\hat{p_{1}}\hat)+\frac{p_{2}(1-p_{2})}{n}+p_{2}^{2}-p_{1}^{2}+2p_{1}p_{2}-p_{2}^{2}=\frac{p_{1}(1-p_{1})}{n}+\frac{p_{2}(1-p_{2})}{n}+2p_{1}p_{2}-2E(\hat{p_{1}}\hat{p_{2}}).
+$$
+
+We know that
+$\mathrm{Cov}(\hat{p_{1}},\hat{p_{2}})=\frac{-p_{1}p_{2}}{n}$ as
+$(N_{1},N_{2},\dots,N_{9})$ is multinomial. This lets us write
+
+$$
+\mathrm{Cov}(\hat{p_{1}},\hat{p_{2}})=E(\hat{p_{1}}\hat{p_{2}})-E(\hat{p_{1}})E(\hat{p_{2}})=\frac{-p_{1}p_{2}}{n}\implies E(\hat{p_{1}}\hat{p_{2}})=p_{1}p_{2}-\frac{p_{1}p_{2}}{n}
+$$
+
+Substituting this value back into the variance lets us write
+
+$$
+\mathrm{Var}(\hat{\theta})=\frac{p_{1}(1-p_{1})}{n}+\frac{p_{2}(1-p_{2})}{n}+2p_{1}p_{2}-2p_{1}p_{2}+\frac{2p_{1}p_{2}}{n}=\frac{p_{1}(1-p_{1})}{n}+\frac{p_{2}(1-p_{2})}{n}+\frac{2p_{1}p_{2}}{n}=\frac{p_{1}+p_{2}-(p_{1}-p_{2})^{2}}{n}
+$$
+
+Taking the square root of this will result in our standard error.
+
+$$
+\mathrm{SE}(\hat{\theta})=\sqrt{\frac{p_{1}+p_{2}-(p_{1}-p_{2})^{2}}{n}}
+$$
+
+Because our estimator is unbiased, the MSE is just the variance so we
+have
+
+$$
+\mathrm{MSE}(\hat{\theta})=\frac{p_{1}+p_{2}-(p_{1}-p_{2})^{2}}{n}
+$$
+
+\bigskip
+
+\noin 2. Let $Y_1,Y_2,\dots,Y_n$ be i.i.d. Log-Normal data, with
+parameters $(\mu, \sigma^2)$. Let $X_j = \log(Y_j)$. By definition,
+$\mu$ and $\sigma^2$ are the mean and variance of $X_j$, not of $Y_j$.
+Let $\theta = {\mathrm E} [Y_1], \psi = \mathrm{Var}(Y_1)$. Let $y_j$ be
+the observed value of $Y_j$ and $x_j$ be the observed value of $X_j$.
+
+\medskip
+
+\noin (a) Find the log-likelihood function
+$\ell(\mu,\sigma^2 ; \mathbf{y})$.
+
+Solution: We will first find the Likelihood function
+$L(\mu,\sigma^{2};\mathbf{y})$. This is written below.
+
+$$
+L(\mu,\sigma^{2}:\mathbf{y})=\prod_{j=1}^{n}\frac{1}{y_{i}\sigma\sqrt{2\pi}}e^{\frac{-(\log y_{i} - \mu)^{2}}{2\sigma^{2}}}
+$$
+
+Then taking the log of this will give
+
+$$
+\ell(\mu,\sigma^{2};\mathbf{y})=-\frac{1}{2\sigma^{2}}\sum_{j=1}^{n}(\log y_{i}-\mu)^{2} - \sum_{j=1}^{n}\log(y_{j}\sigma\sqrt{2\pi})
+$$
+
+\medskip
+
+\noin (b) Find the MLE of $(\mu, \sigma^2)$.
+
+Solution: We will begin with taking partial derivatives with respect to
+$\mu$ and $\sigma^{2}$. For ease of notation, we will define a variable
+$a=\sigma^{2}$. Then, we have
+
+$$
+\frac{ \partial\ell(\mu,a;\mathbf{y}) }{ \partial\mu }=\frac{1}{a}\sum_{j=1}^{n}(\log y_{i}-\mu)
+$$ $$
+\frac{ \partial\ell(\mu,a;\mathbf{y}) }{ \partial a }=\frac{1}{2a^{2}}\sum_{j=1}^{n}(\log y_{j}-\hat{\mu})^{2}-\frac{1}{2a}\sum_{j=1}^{j}\log(y_{j})
+$$ Now we set each partial derivative to zero and solve for our MLE's of
+$\hat{\mu}$ and $\hat{a}$.
+
+$$
+\frac{1}{a}\sum_{j=1}^{n}(\log y_{i}-\hat{\mu})=0\implies\hat{\mu}=\frac{1}{n}\sum_{j=1}^{n}\log y_{j}
+$$ $$
+\frac{1}{2a^{2}}\sum_{j=1}^{n}(\log y_{j}-\hat{\mu})^{2}-\frac{1}{2\sqrt{a}}\sqrt{2\pi}\sum_{j=1}^{j}y_{j}=0\implies a=\frac{1}{n}\sum_{j=1}^{n}(\log y_{j}-\hat{\mu})^{2}
+$$
+
+Therefore, we have the MLE of $\mu$ and $\sigma^{2}$ to be
+$\hat{\mu}=\frac{1}{n}\sum_{j=1}^{n}\log y_{j}$ and
+$\hat{\sigma^{2}}=\frac{1}{n}\sum_{j=1}^{n}(\log y_{j}-\hat{\mu})^{2}$
+respectively.
+
+\medskip
+
+\noin (c) Find the MLE of $(\theta, \psi)$.
+
+Solution: Based on example 6.5.3 of the Stat 110 book, we have
+$E(Y)=e^{\mu+\frac{1}{2}\sigma^{2}}$ and
+$\mathrm{Var}(Y)=e^{2\mu+\sigma^{2}}(e^{\sigma^{2}}-1)$ where
+$Y\sim\mathcal{LN}(\mu,\sigma^{2})$.
+
+Then, plugging in our MLE for $\mu$ and $\sigma^{2}$ gives
+$\hat{\theta}=e^{\hat{\mu}+\frac{1}{2}\hat{\sigma^{2}}}$ and
+$\hat{\psi}=e^{2\hat{\mu}+\hat{\sigma^{2}}}(e^{\hat{\sigma^{2}}}-1)$.
+
+\medskip
+
+\noin (d) Find a method of moments estimator for $(\mu, \sigma^2)$ based
+on moments of $X_j$.
+
+Solution: The first and second theoretical moments of $X_{i}$ for any
+$i\in\{1,2,\dots,n\}$ are $E(X)=\mu$ and $E(X^{2})=\mu^{2}+\sigma^{2}$.
+
+The first moment tells us that
+$E(X)=\mu=\frac{1}{n}\sum_{i=1}^{n}X_{i}=\overline{X}$. Therefore, we
+have our method of moments estimator for $\mu$ as
+$\hat{\mu}=\overline{X}$
+
+The second moment tells us that
+$E(X^{2})=\mu^{2}+\sigma^{2}=\frac{1}{n}\sum_{i=1}^{n}X_{i}^{2}$.
+Substituting in our value $\hat{\mu}=\overline{X}$ and solving for
+$\sigma^{2}$ gives
+
+$$
+\sigma^{2}=\frac{1}{n}\sum_{i=1}^{n}(X_{i}^{2})-\overline{X}^{2}
+$$
+
+This can be rewritten as
+
+$$
+\sigma^{2}=\frac{1}{n}\sum_{i=1}^{n}(X_{i}-\overline{X})^{2}
+$$
+
+Therefore we have
+$\hat{\sigma^{2}}=\frac{1}{n}\sum_{i=1}^{n}(X_{i}-\overline{X})^{2}$.
+
+Therefore, we conclude that our method of moments estimator for $\mu$
+and $\sigma^{2}$ based on moments of $X_{j}$ are
+$\hat{\mu}=\overline{X}=\frac{1}{n}\sum_{i=1}^{n}X_{i}$ and
+$\hat{\sigma^{2}}=\frac{1}{n}\sum_{i=1}^{n}(X_{i}-\overline{X})^{2}$
+
+\medskip
+
+\noin (e) Find a method of moments estimator for $(\mu, \sigma^2)$ based
+on moments of $Y_j$.
+
+Solution: As in part (c), we have $\theta=e^{\mu+\frac{1}{2}\sigma^{2}}$
+and $\phi=e^{2\mu+\sigma^{2}}(e^{\sigma^{2}}-1)$
+
+$$
+\mu=\ln(\theta)-\frac{1}{2}\sigma^{2}
+$$
+$$
+\sigma^{2}=\ln(\frac{\psi}{\theta^{2}}+1)
+$$
+
+By definition, we have
+$\theta=E(Y)=\frac{1}{n}\sum_{i=1}^{n}Y_{n}=\overline{Y}$ and
+$\psi=E(Y^{2})-E(Y)^{2}=\frac{1}{n}\sum_{i=1}^{n}(Y_{i}^{2})-\overline{Y}^{2}$.
+Plugging these in gives
+
+$$
+\hat{\sigma^{2}}=\ln(\frac{\frac{1}{n}\sum_{i=1}^{n}(Y_{i}^{2})-\overline{Y}^{2}}{\overline{Y}^{2}}+1)=\ln(\frac{\sum_{i=1}^{n}Y_{i}^{2}}{\overline{Y}})
+$$ $$
+\hat{\mu}=\ln(\overline{Y})-\frac{1}{2}\ln(\frac{\sum_{i=1}^{n}Y_{i}^{2}}{\sum_{i=1}^{n}Y_{i}})
+$$
+
+\bigskip
+
+\noin 3. The \emph{Weibull distribution} is a generalization of the
+Exponential, obtained by raising an Exponential random variable to some
+constant power. The Weibull is especially widely-used in survival
+analysis (e.g., as a model for how long an electronic device will work
+until it fails), but is also used as a flexible model for many other
+phenomena.
+
+\medskip
+
+\noin Let $Y_1,\dots,Y_n$ be i.i.d. Weibull random variables with
+parameters $\lambda$ and $\gamma$. This means that
+$Y_j = T_j^{1/\gamma}$, where $T_j \sim \mathrm{Bin}(\lambda)$. (Several
+different parameterizations of the Weibull are used in the literature,
+so be careful if looking at other sources. The R section in Chapter 6 of
+the Stat 110 book discusses how to work with the Weibull in R, and how
+to relate the parameterization that R uses to the one described above.)
+
+\medskip
+
+\noin The $Y_j$ will be observed, giving us data $y_1,\dots,y_n$.
+
+\medskip
+
+\noin (a) Find the $p$-quantile of $Y_j$, by relating $Y_j$ back to
+$T_j$.
+
+Solution: By the definition of quantile, we have $p=P(Y_{j}\leq Q(p))$.
+Then, the fact that $Y_{j}=T_{j}^{\frac{1}{\gamma}}$ lets us write
+$p=P(T_{j}\leq Q(p)^{\gamma})$. As each
+$T_{j}\sim\mathrm{Expo}(\lambda)$, we can use the exponential CDF to
+write
+
+$$
+p=1-e^{-\lambda Q(p)^{\gamma}}.
+$$
+
+We can the manipulate this to get
+
+$$
+Q(p)=(\frac{\ln(1-p)}{-\lambda})^{\frac{1}{\gamma}}
+$$
+
+\medskip
+
+\noin (b) Show that
+
+$$
+{\textrm E}[Y_j] = \frac{\Gamma(1+1/\gamma)}{\lambda^{1/\gamma}}.
+$$
+
+\medskip
+
+In order to find $E(Y_{j})$, we use LOTUS to calculate $E(g(T_{j}))$
+where $g(x)=x^{\frac{1}{\gamma}}$. The calculations are shown as
+follows.
+
+$$
+E(g(T_{j}))=\int_{0}^{\infty}x^{\frac{1}{\gamma}}(\lambda e^{\lambda x})dx
+$$ 
+Letting $u=-\lambda x$ lets us write
+
+$$
+E(g(T_{j}))=\lambda^{-\frac{1}{\gamma}}\int_{0}^{\infty}u^{\frac{1}{\gamma}}e^{-u}du
+$$
+
+Matching this with the Gamma PDF integration lets us conclude that
+
+$$
+E(Y_{j})=\frac{\Gamma(1+\frac{1}{\gamma})}{\lambda^{\frac{1}{\lambda}}}
+$$
+
+\noin \emph{For the remainder of this problem,  assume for simplicity that it is known that $\gamma = 3.4$. The estimand is $\lambda$.}
+
+\medskip
+
+\noin (c) Find a method of moments estimator for $\lambda$ based on the
+result from the previous part.
+
+Solution: From part (b), we have
+$E(Y_{j})=\frac{\Gamma(1+\frac{1}{\gamma})}{\lambda^{\frac{1}{\gamma}}}$
+
+Shifting around terms and raising everything to the power of $\gamma$
+gives
+
+$$
+\lambda=(\frac{\Gamma(1+\frac{1}{\gamma})}{E(Y_{j})})^{\gamma}
+$$
+
+Therefore, our method of moments estimator is
+
+$$
+\hat{\lambda}=(\frac{\Gamma(1+\frac{1}{\gamma})}{\frac{1}{n}\sum_{j=1}^{n}Y_{j}})^{\gamma}
+$$
+
+\medskip
+
+\noin (d) Find a method of moments estimator for $\lambda$ based on
+first transforming the $Y_j$'s back to the $T_j$'s and then using the
+fact that $E(T_j) = 1/\lambda$.
+
+Solution: By the definition of exponential distributions, we have
+$E(T_{j})=\frac{1}{\lambda}$. Therefore, we have
+
+$$
+\lambda=\frac{1}{E(T_{j})}
+$$
+
+Then, our method of moments estimator is
+
+$$
+\hat{\lambda}=\frac{n}{\sum_{j=1}^{n}Y_{j}}
+$$
+
+\medskip
+
+\noin (e) Find the likelihood function $L(\lambda ; \mathbf{y})$ and the
+MLE of $\lambda$.
+
+Solution: First, note that the PDF of $Y_{j}$ is
+$f(y_{j})=\gamma\lambda e^{-\lambda y_{j}^{\gamma}}y_{j}^{\gamma-1}$.
+Our likelihood function is then
+
+$$
+L(\lambda:\mathbf{y})=\prod_{j=1}^{n}\gamma\lambda e^{-\lambda y_{j}^{\gamma}}y_{j}^{\gamma-1}
+$$
+
+Dropping our multiplicative constants lets us write
+
+$$
+L(\lambda;\mathbf{y})=\prod_{j=1}^{n}\lambda e^{-\lambda y_{j}^{\gamma}}
+$$
+
+Now to calculate the MLE, we will examine the log-likelihood
+
+$$
+\ell(\lambda;\mathbf{y})=n\log\lambda-\lambda\sum_{j=1}^{n}y_{j}^{\gamma}
+$$
+
+Now, taking the derivative with respect to $\lambda$ gives
+
+$$
+\frac{d\ell(\lambda;\mathbf{y})}{d\lambda}=\frac{n}{\lambda}-\sum_{j=1}^{n}y_{j}^{\gamma}
+$$
+
+Setting this equal to zero gives us 
+
+$$
+\lambda=\frac{n}{\sum_{j=1}^{n}y_{j}^{\gamma}}
+$$
+
+We now take the second derivative to check if it is actually a maximum.
+The second derivative is
+
+$$
+\frac{ d^{2}\ell(\lambda,\mathbf{y}) }{ d\lambda^{2} }=-\frac{n}{\lambda^{2}}
+$$
+
+As $\lambda$ and $n$ are both positive, we conclude that the second
+derivative is negative. Therefore, we conclude that our MLE for
+$\lambda$ is
+
+$$
+\hat{\lambda}=\frac{n}{\sum_{j=1}^{n}Y_{j}^{\gamma}}
+$$ 
+
+\bigskip
+
+\noin 4. A book manuscript has $n$ typos. Two proofreaders, Prue and
+Frida, are going to read the manuscript, independently. For any
+particular typo Prue has probability $p_1$ of catching it and Frida has
+probability $p_2$ of catching it, independently across typos. The
+parameters $n, p_1, p_2$ are all unknown. After Prue and Frida finish
+proofreading, we would like to estimate both $n$ and the number of
+uncaught typos.
+
+\medskip
+
+\noindent We will observe $(Y_1,Y_2,Y_3)$, where $Y_1$ is the number of
+typos caught by Prue (regardless of whether or not Frida caught them),
+$Y_2$ is the number of typos caught by Frida, and $Y_3$ is the number of
+typos caught by both Prue and Frida.
+
+\medskip
+
+\noin (a) Solve for $n$ in terms of the expectations
+$E(Y_1), E(Y_2), E(Y_3)$. Use this result to obtain a method of moments
+estimator for $n$.
+
+Solution: Note that we have $Y_{1}\sim\Bin(n,p_{1})$,
+$Y_{2}\sim\Bin(n,p_{2})$, and $Y_{3}\sim\Bin(n,p_{1}p_{2})$. From this,
+we have $E(Y_{1})=np_{1}$, $E(Y_{2})=np_{2}$, and
+$E(Y_{3})=np_{1}p_{2}$. Therefore, we can write
+
+$$
+\frac{E(Y_{1})E(Y_{2})}{E(Y_{3})}=\frac{np_{1}np_{2}}{np_{1}p_{2}}=n
+$$
+
+Therefore, we conclude that $\hat{n}=\frac{Y_{1}Y_{2}}{Y_{3}}$ is a
+method of moments estimator for $n$.
+
+\medskip
+
+\noin (b) An estimator that has been proposed for the number of uncaught
+typos is $$ \frac{(Y_1 - Y_3)(Y_2 - Y_3)}{Y_3}.$$ Use the result of (a)
+to explain the logic behind this estimator.
+
+Solution: Expanding the numerator and rearranging terms allows us to
+write
+
+$$
+\frac{(Y_{1}-Y_{3})(Y_{2}-Y_{3})}{Y_{3}}=\frac{Y_{1}Y_{2}}{Y_{3}}-Y_{1}-Y_{2}+Y_{3}
+$$
+
+From part (a), we know that $\frac{Y_{1}Y_{2}}{Y_{3}}$ is an estimator
+for $n$. Then, the principle of inclusion exclusion lets us conclude
+that $\frac{Y_{1}Y_{2}}{Y_{3}}-Y_{1}-Y_{2}+Y_{3}$ is number of uncaught
+typos.
+
+\medskip
+
+\noin (c) A flaw in the estimator from (b) is that the denominator may
+be $0$. How likely this is depends on the parameters, but even if it is
+very unlikely, the expected value is undefined since the estimator
+itself has positive probability of being undefined. So for this part,
+consider a modified version of the estimator from (b), using $Y_3+1$
+instead of $Y_3$ in the denominator.
+
+\medskip
+
+\noindent Evaluate this estimator via simulation, with at least $10^4$
+replications, for the case where $n = 300, p_1 = 0.4,$ and $p_2 = 0.8$.
+Provide the approximate MSE.
+
+Solution: The code for evaluating the estimator is shown below.
+
+```{r}
+#set seed and initialize parameters
+set.seed(111)
+n <- 300
+p_1 <- 0.4
+p_2 <- 0.8
+trials <- 10^4
+
+#We now run the trials with a multinomial. Each bucket will be caught by P,
+#caught by F, caught by both, or caught by neither
+
+typos=rmultinom(trials,n,c(p_1*(1-p_2), p_2*(1-p_1), p_1*p_2,(1-p_1)*(1-p_2)))
+
+#Now we get our data Y_{1}, Y_{2}, and Y_{3} by adding the respective columns.
+
+Y_1 <- typos[1,]+typos[3,]
+Y_2 <- typos[2,]+typos[3,]
+Y_3 <- typos[3,]
+uncaught <- typos[4,]
+
+estimator = ((Y_1-Y_3)*(Y_2-Y_3))/(Y_3 + 1)
+
+#We will now calculate the MSE
+MSE <- mean((uncaught-estimator)^2)
+
+print(paste("The MSE is: ",MSE))
+```

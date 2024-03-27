@@ -1,0 +1,501 @@
+---
+title: "Stat 111 Homework 10 (Penultimate), Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 4/21 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\bigskip
+
+\noin 1. The book \emph{Applying statistics in the courtroom: a new approach for attorneys and expert witnesses} by Phillip I. Good discusses a court case where the plaintiff claimed that she and other women at her company had been discriminated against in terms of the time it took to be promoted. The following data on the times (in months) from time of hire to time of promotion for women and men at the company were provided as evidence. Within each row, the data have been sorted in increasing order.
+
+\medskip
+
+\noin Women: 229, 453 \newline
+\noin Men:  5, 7, 12, 14, 14, 14, 18, 21, 22, 23, 24, 25, 34, 37, 47, 49, 64, 67, 69, 125, 192, 483 \newline
+
+\noin It is unclear if there is selection bias (e.g., the data are a sample collected in a way that could bias the results)  or censoring (e.g., some employees had not yet ever been promoted) in the data. For the sake of this problem, assume that the data for women are an i.i.d. sample from the true underlying distribution for women at the company, and likewise the data for men are an i.i.d. sample from the true underlying distribution for men at the company. Let $\mu_1$ and $\mu_2$ be the mean times until promotion for women at the company and men at the company, respectively. Let the allowable Type I error rate be $\alpha = 0.05$. 
+
+\medskip
+
+\noin (a) Perform a two sample $t$-test for $H_0: \mu_1 =  \mu_2$ vs. $H_1: \mu_1 \neq \mu_2$, \emph{without} the (unreasonable) assumption of equal variances. If you are using \texttt{R} for this, you can use the \texttt{t.test} command with the option \texttt{var.equal = FALSE} (which is the default in  \texttt{R}, since it seems unreasonable to assume without justification that the variances of the two groups are equal).
+
+\textbf{Solution:} The R code to run this two sample $t$-test is shown below
+
+```{r}
+set.seed(111)
+women <- c(229, 453)
+men <- c(5, 7, 12, 14, 14, 14, 18, 21, 22, 23, 24, 25, 34, 37, 47, 49, 64, 67, 69, 125, 192, 483)
+
+t.test(women,men,var.equal=FALSE,conf.level = 0.95)
+```
+
+As the $p$-value is above $0.05$, we fail to reject the null hypothesis that the means are equal.
+
+\medskip
+
+\noin (b) Perform a permutation test (with at least $10^4$ random permutations) for whether the distributions of time until promotion are the same for women and men. Use the absolute difference between the sample means of the two groups as test statistic.
+
+\textbf{Solution:} The $R$ code to run the permutation test is shown below.
+
+```{r}
+set.seed(111)
+women <- c(229, 453)
+men <- c(5, 7, 12, 14, 14, 14, 18, 21, 22, 23, 24, 25, 34, 37, 47, 49, 64, 67, 69, 125, 192, 483)
+B=10^4
+data <- c(women,men)
+test_statistic <- abs(mean(women)-mean(men))
+bootstrap_statistic <- rep(0,B)
+bootstrap_data <- data
+
+for (i in 1:B){
+  bootstrap_data <- sample(data)
+  bootstrap_statistic[i] <- abs(mean(bootstrap_data[1:length(women)])-
+                                  mean(bootstrap_data[(length(women)+1):length(data)]))
+}
+
+pvalue = length(bootstrap_statistic[bootstrap_statistic>=test_statistic])/B
+
+final_ecdf=ecdf(bootstrap_statistic)
+1-final_ecdf(test_statistic)
+
+pvalue
+```
+
+The $p$-value for this test is therefor $0.0105$. Therefore, the permutation test rejects the null hypothesis.
+
+\medskip
+
+\noin (c) Suppose for this part that the data are such that both tests say to reject the null. Compare the assumptions behind the test in (a) and the test in (b). Also compare the conclusions that can be drawn if those assumptions hold. Which test (if either) do you think would be more persuasive evidence in court for discrimination, and why? 
+
+\textbf{Solution:} The main assumption in (a) is that the data follows a normal distribution and the null hypothesis is that the means are equal. The main assumption in (b) is that the data is i.i.d. (no underlying distribution assumption) but the null hypothesis is stronger as it is the two distributions are the same.
+
+Rejecting the null in part (a) only allows us to conclude that the promotion times are different for men and women. Rejecting the null in part (b) lets lets us conclude that the distributions are different (although we do not get anything about the parameters of the distributions).
+
+The test in part (b) is more persuasive for two main reasons. First, the limited data makes the assumption of a normal distribution difficult, so the non-parametric permutation test is better in that regard as it does not assume any underlying distribution. Second, a difference in mean time does not directly imply discrimination as women could be promoted faster than men, but have also worked more time. A difference in distribution is much more convincing to show that there is underlying discrimination in the promotion times.
+
+\bigskip
+
+\noin 2. Suppose that $50$ people are assigned to standard treatment and $50$ people are assigned to a new treatment. It is observed that exactly $30$ people in the standard treatment group show improvement, and exactly $40$ people in the new treatment group show
+improvement. Within each group, you can regard the data as $50$ i.i.d. Bernoullis rather than $1$ Binomial.  Let $\tau = p_{1}-p_{0}$, where $p_1$ and $p_0$ are the probabilities of showing improvement when assigned the new treatment and when assigned the standard treatment, respectively.
+
+\medskip
+
+\noin (a) Find the MLE $\hat{\tau}$ of $\tau$, and the standard error of $\hat{\tau}$. Also derive an approximate 95\% confidence interval for $\tau$, based on asymptotics.
+
+\textbf{Solution:} We will let $S_{1},S_{2},\dots,S_{50}\overset{i.i.d.}{\sim}\Bern(p_{0})$ be the patients who received the standard treatment and $N_{1},N_{2},\dots,N_{50}\overset{i.i.d.}{\sim}\Bern(p_{1})$ be the patients who received the new treatment. We have showed that the MLE of Bernouli variables is just the sample mean, so we have $\hat{p_{0}}=\bar{S}=0.6$ and $\hat{p_{1}}=\bar{N}=0.8$. Therefore, invariance of the MLE gives $\hat{\tau}=\hat{p_{1}}-\hat{p_{0}}=\bar{N}-\bar{S}=0.2$.
+
+To find the standard error, we will calculate the variance of $\hat{\tau}$. Variance rules and the fact that $n\bar{S}\sim\Bin(50,p_{0})$ and $n\bar{S}\sim\Bin(50,p_{1})$ gives
+
+$$
+\Var({\hat{\tau}})=\Var({\bar{N}})+\Var(\hat{S})=\frac{1}{n^{2}}(\Var(n\bar{N})+\Var(n\bar{S}))=\frac{p_{1}(1-p_{1})+p_{0}(1-p_{0})}{n}
+$$
+
+Therefore, our standard error is $SE(\hat{\tau})=\sqrt{\Var(\hat{\tau})}=\sqrt{\frac{p_{1}(1-p_{1})+p_{0}(1-p_{0})}{n}}=\sqrt{\frac{0.8*0.2+0.6*0.4}{50}}\approx0.08944$.
+
+The data is asymptotically normal, so our approximate $95\%$ confidence interval is $[\hat{\tau}-1.96*SE(\hat{\tau}),\hat{\tau}+1.96*SE(\hat{\tau})]$. Plugging in our calculated values for $\hat{\tau}$ and its standard error gives us our final confidence interval of $[0.0246976,0.3753024]$.
+
+\medskip
+
+\noin (b) Approximate the standard error of $\hat{\tau}$ using the nonparametric bootstrap. How does your answer compare with the standard error that you derived mathematically in (a)?
+
+\smallskip
+
+\noin Hint: Construct each bootstrap replication based on generating a bootstrap sample from the standard treatment group and a bootstrap sample from the new treatment group. 
+
+\textbf{Solution:} The code for a nonparametric bootstrap is shown below.
+
+```{r}
+set.seed(111)
+standard <- c(rep(1,30),rep(0,20))
+new <- c(rep(1,40),rep(0,10))
+B = 10^4
+tau <- rep(0,B)
+
+p_0 <- replicate(B, mean(sample(standard, length(standard), replace=TRUE)))
+p_1 <- replicate(B, mean(sample(new,length(new),replace=TRUE)))
+
+tau <- p_1 - p_0
+
+SE <- sd(tau)
+SE
+
+```
+
+As seen, the simulated standard error and the mathematical standard error calculated in part (a) are very similar.
+\medskip
+
+\noin (c) Would using the parametric bootstrap in (b) have been equivalent? If so, explain why. If not, explain which version of the bootstrap would be preferable. 
+
+\textbf{Solution:} The parametric bootstrap would be the same as the non-parametric bootstrap. This is because each value is chosen with replacement, so the sample is the same as choosing from a $\Bin(50,p_{0})$ random variable for the standard treatment and $\Bin(50,p_{1})$ for the new treatment. Therefore, the parametric and non-parametric bootstraps should yield the same result.
+
+\medskip
+
+\noin (d) Form an approximate $95$\% bootstrap confidence interval for $\tau$ using the percentile interval. How does your interval compare with the interval from (a)?
+
+\textbf{Solution:} The code to calculate the bootstrap interval is shown below.
+
+```{r}
+set.seed(111)
+standard <- c(rep(1,30),rep(0,20))
+new <- c(rep(1,40),rep(0,10))
+B = 10^4
+tau <- rep(0,B)
+
+p_0 <- replicate(B, mean(sample(standard, length(standard), replace=TRUE)))
+p_1 <- replicate(B, mean(sample(new,length(new),replace=TRUE)))
+
+tau <- p_1 - p_0
+
+lower <- quantile(tau,0.025)
+upper <- quantile(tau,0.975)
+print(c(lower,upper))
+```
+
+Our $95\%$ bootstrap interval is $[0.02,0.38]$ which is very similar to our result in part (a).
+
+\bigskip
+
+\noin 3. Let $Y_1,Y_2,\dots,Y_n$ be i.i.d. $\Pois(\lambda)$. The estimand is $\theta = P(Y_1 = 0)$. Let $\hat{\theta}$ be the MLE of $\theta$. 
+
+\medskip
+
+\noin (a) Find the exact bias and exact standard error of $\hat{\theta}$, in terms of $\lambda$. 
+
+\smallskip
+
+\noin Hint: Use the result for the MGF of a Poisson. 
+
+\textbf{Solution:} We will first calculate the MLE of $\lambda$. As the Poisson distribution is an NEF, we know that $\hat{\lambda}=\bar{Y}$. We also know that as $Y_{1}\sim\Pois(\lambda)$, we have
+
+$$
+\theta=P(Y_{1}=0)=e^{-\lambda}
+$$
+
+Invariance of the MLE then gives
+
+$$
+\hat{\theta}=e^{-\hat{\lambda}}=e^{-\bar{Y}}
+$$
+
+Now, we will calculate the bias and standard error. First, we will calculate the bias. To do so, we will find $E(\hat{\theta})=E(e^{-\bar{Y}})$. First, note that $\bar{Y}=\frac{\sum_{i=1}^{n}Y_{i}}{n}$ and $\sum_{i=1}^{n}Y_{i}\sim\Pois(n\lambda)$ as each $Y_{i}$ is i.i.d. $\Pois(\lambda)$. Therefore, our calculation is then
+
+$$
+E(\hat{\theta})=E(e^{-\bar{Y}})=E(e^{-\frac{1}{n}\sum_{i=1}^{n}Y_{i}})
+$$
+
+We know that the MGF for a variable $X\sim\Pois(n\lambda)$ $E(e^{\alpha X})=e^{n\lambda(e^{\alpha}-1)}$ where $\alpha$ is a constant. Therefore, as $\sum_{i=1}^{n}Y_{i}\sim\Pois(n\lambda)$, we have
+
+$$
+E(e^{-\frac{1}{n}\sum_{i=1}^{n}Y_{i}})=e^{n\lambda(e^{-1/n}-1)}
+$$
+
+Therefore, we have
+
+$$
+\Bias(\hat{\theta})=E(\hat{\theta})-\theta=e^{n\lambda(e^{-1/n}-1)}-e^{-\lambda}
+$$
+
+Now, we will calculate $\sqrt{\Var{\hat{\theta}}}$ to get the standard error. The definition of variance gives us
+
+$$
+\Var({\hat{\theta}})=E(\hat{\theta}^{2})-E(\hat{\theta})^{2}
+$$
+
+We know that $E(\hat{\theta})=e^{n\lambda(e^{-1/n}-1)}$ from the MGF. The MGF also lets us write
+
+$$
+E(\hat{\theta}^{2})=E(e^{-2\bar{Y}})=E(e^{-\frac{2}{n}\sum_{i=1}^{n}Y_{i}})=e^{n\lambda(e^{-2/n}-1)}
+$$
+
+Plugging these values in gives
+
+$$
+\Var{\hat{\theta}}=e^{n\lambda(e^{-2/n}-1)}-e^{2n\lambda(e^{-1/n}-1)}
+$$
+
+Therefore, the standard error of $\hat{\theta}$ is $SE(\hat{\theta})=\sqrt{e^{n\lambda(e^{-2/n}-1)}-e^{2n\lambda(e^{-1/n}-1)}}$.
+\medskip
+
+\noin (b) Find the approximate bias and approximate standard error of $\hat{\theta}$ for $n$ large (in terms of $\lambda$), using Taylor approximation rather than the methods or results from (a). 
+
+\smallskip
+
+\noin Hint: For the variance, Taylor approximation just means to use the delta method. For the bias, we know that MLEs are asymptotically unbiased, but please give a more informative answer than just saying the bias is approximately $0$. To do so, write $\hat{\theta}$ as a function of $\bar{Y}$, and then use a degree 2 Taylor approximation (expanding about $\lambda$).
+
+\textbf{Solution:} We will examine the bias and standard error individually. We know from part (a) that $\hat{\theta}=e^{-\bar{Y}}$. The expansion of this around $\lambda$ is as follows
+
+$$
+e^{-\bar{Y}}\approx e^{-\lambda}-e^{-\lambda}(\bar{Y}-\lambda)+\frac{1}{2}e^{-\lambda}(\bar{Y}-\lambda)^{2}
+$$
+
+Then, taking the expectation of the right side gives
+
+$$
+E(\hat{\theta})\approx E(e^{-\lambda}-e^{-\lambda}(\bar{Y}-\lambda)+\frac{1}{2}e^{-\lambda}(\bar{Y}-\lambda)^{2})
+$$
+
+Note that $E(e^{-\lambda})=e^{-\lambda}$ as it is constant. We also know that $E(\bar{Y}-\lambda)=0$ as $E(\bar{Y})=\lambda$. Finally, we know that $E((\bar{Y}-\lambda)^{2})=\Var{\bar{Y}}$. Therefore, linearity and these previous facts gives
+
+$$
+E(e^{-\lambda}-e^{-\lambda}(\bar{Y}-\lambda)+\frac{1}{2}e^{-\lambda}(\bar{Y}-\lambda)^{2})=e^{-\lambda}-0+\frac{1}{2}e^{-\lambda}\Var{\bar{Y}}
+$$
+
+Note that as in part (a), we have $n\bar{Y}\sim\Pois(n\lambda)$. Therefore, we have $\Var{\bar{Y}}=\frac{1}{n^{2}}n\lambda=\frac{\lambda}{n}$ Therefore, our bias is
+
+$$
+\Bias(\hat{\theta})=E(\hat{\theta})-\theta\approx e^{-\lambda}+\frac{e^{-\lambda}}{2}\frac{\lambda}{n}-e^{-\lambda}=\frac{e^{-\lambda}}{2}\frac{\lambda}{n}
+$$
+
+Note that as $n$ becomes large, then $\Bias(\hat{\theta})=0$ which agrees with the asymtotic unbiased MLE.
+
+Now, we will calculate standard error. To do so, we will calculate the asymptotic variance of $\hat{\theta}=e^{-\bar{Y}}$. We know that for large $n$, CLT gives us
+
+$$
+\sqrt{n}(\bar{Y}-\lambda)\sim\mathcal{N}(0,\lambda)
+$$
+
+Now, we will define $g(x)=e^{-x}$ and use delta method. Note that we are allowed to use delta method as $g(x)$ is continuously differentiable. Then, we get
+
+$$
+\sqrt{n}(e^{-\bar{Y}}-e^{-\lambda})\sim\mathcal{N}(0,e^{-2\lambda}\lambda)
+$$
+
+Rearranging gives
+
+$$
+e^{-\bar{Y}}\overset{\cdot}{\sim}\mathcal{N}(e^{-\lambda},\frac{e^{-2\lambda}\lambda}{n})
+$$
+
+Therefore, we have $\Var(e^{-\bar{Y}})\approx \frac{e^{-2\lambda}\lambda}{n}$ for $n$ large. Therefore, for large $n$, our standard error is
+
+$$
+SE(\hat{\theta})=\sqrt{\Var(\hat{\theta})}\approx e^{-\lambda}\sqrt{\frac{\lambda}{n}}
+$$
+\medskip
+
+\noin (c) For the remainder of this problem, assume that $n = 10$ and the observed data are $(3, 7, 8, 4, 10, 7, 4, 11, 3, 4)$. Give the maximum likelihood estimates of the quantities from (a) and (b).
+
+\medskip
+
+\textbf{Solution:} The R code to calculate the values is shown below
+
+```{r}
+data <- c(3,7,8,4,10,7,4,11,3,4)
+Y_bar <- mean(data)
+n <- 10
+
+#calculate bias and variance of part (a)
+bias_a <- (exp(n*Y_bar*(exp(-1/n)-1))-exp(-Y_bar))
+SE_a <- sqrt(exp(n*Y_bar*(exp(-2/n)-1))-exp(2*n*Y_bar*(exp(-1/n)-1))) 
+print(c(bias_a,SE_a))
+
+#calculate biase and variance of part (b)
+bias_b <- exp(-Y_bar) * Y_bar / (2*n)
+SE_b <- exp(-Y_bar) * sqrt(Y_bar / n)
+print(c(bias_b,SE_b))
+```
+
+Therefore, the bias and standard errors for (a) and (b) are $(0.0007698356,0.002586133)$ and $(0.0006840747,0.0017517357)$ respectively.
+
+\noin (d) Use the nonparametric bootstrap to approximate the bias and standard error of $\hat{\theta}$ directly, without using any results from (a) or (b). Use at least $B = 1000$ bootstrap replications. 
+
+\medskip
+
+\textbf{Solution:} The code to calculate the bias and standard error of $\hat{\theta}$ with $1000$ bootstrap replications is shown below.
+
+```{r}
+set.seed(111)
+B=1000
+data <- c(3,7,8,4,10,7,4,11,3,4)
+
+theta_bootstrap <- replicate(B,exp(-mean(sample(data,length(data),replace=TRUE))))
+
+bias <- mean(theta_bootstrap) - exp(-mean(data))
+SE <- sd(theta_bootstrap-exp(-mean(data)))
+
+print(c(bias,SE))
+```
+
+The bias and standard error of the non-parametric bootstrap are $0.0009453868$ and $0.0029854391$ respectively.
+
+\noin (e) Repeat (d), except now using the parametric bootstrap. 
+
+\textbf{Solution:} The code to simulate a parametric bootstrap is shown below.
+
+```{r}
+set.seed(111)
+B=1000
+data <- c(3,7,8,4,10,7,4,11,3,4)
+hat_lambda <- mean(data)
+theta_bootstrap <- replicate(B,exp(-mean(rpois(length(data),hat_lambda))))
+
+bias <- mean(theta_bootstrap) - exp(-mean(data))
+SE <- sd(theta_bootstrap-exp(-mean(data)))
+
+print(c(bias,SE))
+```
+
+The bias and standard error for the parametric bootstrap are $0.0007435443$ and $0.0024580059$ respectively.
+
+\bigskip
+
+\noin 4. Let $Y_1,\dots,Y_n$ be i.i.d. $\Unif(0,\theta)$, where $\theta$ is the estimand. As we have seen several times in the course, weird things can happen in this model, since the support of the data depends on the parameter. This problem explores how the bootstrap fares in this setting. Let $\hat{\theta} = Y_{(n)}$ be the MLE of $\theta$, and $T_n = n(\theta - \hat{\theta})$. 
+
+\medskip
+
+\noin (a) Determine what $T_n$ converges to in distribution as $n \to \infty$, in two different ways: (i) using the bank--post office story (Story 8.5.1 in the Stat 110 book), and (ii) by finding the CDF of $T_n$, and then taking the limit of the CDF as $n \to \infty$. 
+
+\textbf{Solution:} By chapter $8$ of the Stat 110 textbook, we know that the $jth$ order statistic of random variables $Y_{1},\dots,Y_{n}\overset{i.i.d.}{\sim}\Unif(0,1)$ is distributed $\Beta(j,n-j+1)$. Therefore, we can use scaling of the normal to get $\frac{\hat{\theta}}{\theta}\sim\Beta(n,1)$.
+
+The bank--post office story also give us $\frac{X}{X+Y}\sim\Beta(a,b)$ where $X\sim\Gam(a,\lambda)$ and $Y\sim\Gam(b,\lambda)$. Therefore, we can write
+
+$$
+\frac{\hat{\theta}}{\theta}\sim\Beta(n,1)\implies\frac{\hat{\theta}}{\hat{\theta}+(\theta-\hat{\theta})}\sim\Beta(n,1)
+$$
+
+Applying the bank--post office story gives $\hat{\theta}\sim\Gam(n,\lambda)$ and $\theta-\hat{\theta}\sim\Gam(1,\lambda)=\Expo(\lambda)$. We can now do the following manipulation on $T_{n}$
+
+$$
+T_{n}=n(\theta-\hat{\theta})=n\theta(1-\frac{\hat{\theta}}{\theta})=n\theta(1-\frac{X}{X+Y})=\frac{\theta Y}{\frac{X}{n}+\frac{Y}{n}}
+$$
+
+LLN gives $\frac{Y}{n}\overset{p}{\to}0$ and $\frac{X}{n}\overset{p}{\to}\frac{1}{\lambda}$. This is because a $\Gam(n,\lambda)$ random variable is the sum of $n$ independent $\Expo(\lambda)$ random variables, so $X/n$ is just the sample mean.
+
+Now, we only need to find $\theta Y$ before applying Slutsky's theorem. Scaling of the exponential distribution lets us write $\theta Y\sim\Expo(\frac{\lambda}{\theta})$. Then, Slutsky
+s theorem gives
+
+$$
+\frac{\theta Y}{\frac{X}{n}+\frac{Y}{n}}=\lambda\theta Y\sim\Expo(1/\theta)
+$$
+
+Therefore, we have $T_{n}\overset{d}{\to}\Expo(1/\theta)$.
+
+We will now show this with finding the limit of the CDF as $n$ approaches infinity. The Uniform distribution gives
+
+$$
+P(Y_{n}\leq y)=(\frac{y}{\theta})^{n}
+$$
+
+Then, by transformation of variables, we can write
+
+$$
+F(t)=P(T_{n}\leq t)=P(n(\theta-\hat{\theta})\leq t)=P(\theta-\hat{\theta}\leq\frac{t}{n})=P(-\hat{\theta}\leq\frac{t}{n}-\theta)=1-P(\hat{\theta}\leq\theta-\frac{t}{n})
+$$
+
+As we have $\hat{\theta}=Y_{n}$, we know that $F(t)=1-P(Y_{n}\leq\theta-\frac{t}{n})=1-(1-\frac{t}{\theta n})^{n}$. We then take the limit of this as $n\to\infty$ to get our final CDF. Note that we use the Taylor series for $e^x$ to get our last equality.
+
+$$
+\lim_{n\to\infty}F(t)=\lim_{n\to\infty}1-(1-\frac{t}{\theta n})^{n}=(1-e^{-t/\theta})
+$$
+
+This is the same CDF as an $\Expo(1/\theta)$ random variable, so we have $T_{n}\overset{d}{\sim}\Expo{1/\theta}$.
+
+\medskip
+
+\noin (b)  Let $T^*_n = n(\hat{\theta} - \hat{\theta}^*)$ where, as usual in bootstrap notation, $\hat{\theta}^*$ is obtained by generating a bootstrap sample and then computing the estimator on that sample. Find the limit of $P(T^*_n = 0|Y_1,\dots,Y_n)$ as $n \to \infty$. What does the discrepancy between the results of parts (a) and (b) tell us about the performance of the bootstrap in this example?
+
+\textbf{Solution:} The only way that $T^{*}_{n}=0$ is if $\hat{\theta}-\hat{\theta^{*}}=0$ which occurs when the maximum element is drawn at least once in the bootstrap sample. We now calculate this probability with complementary counting
+
+$$
+P(T^*_n = 0|Y_1,\dots,Y_n)=1-(1-\frac{1}{n})^{n}
+$$
+
+Taking this limit as $n\to\infty$ then gives the following based on the taylor series expansion for $e^{x}$
+
+$$
+\lim_{n\to\infty}1-(1-\frac{1}{n})^{n}=1-e^{-1}
+$$
+
+The biggest discrepency between this result and the result in part (a) is that this result is nonzero while the result in part (a) is a continuous distribution. The probability of taking on a specific value is zero for continuous distributions, but it is clearly not the case here. This means that the boostrap is low performance in this example.
+
+\medskip
+
+\noin (c) For the case where the true $\theta$ is $1$, find the coverage probability of a 95\% bootstrap confidence interval for $\theta$, via simulation, using the basic Normal bootstrap CI. In your simulation, take $n = 100$, and use at least $B = 200$ bootstrap samples per replication of the simulation, and  at least $10^4$ simulation replications. Also, explain intuitively why the coverage probability does not appear to be 95\%.
+
+\textbf{Solution:} The code to do this is shown below.
+
+```{r}
+set.seed(111)
+reps <- 10^4
+n <- 100
+B <- 200
+covered <- 0
+
+
+for (i in 1:reps){
+Y <- runif(n)
+theta_bootstrap <- replicate(B,max(sample(Y,n,replace=TRUE)))
+
+if(max(Y)-1.96*sd(theta_bootstrap) < 1 && 1 < max(Y)+1.96 * sd(theta_bootstrap)){
+  covered <- covered + 1
+}
+}
+
+covered/reps
+```
+
+This value is clearly less than $0.95$ which makes sense as we are using a normal distribution to approximate an exponential distribution. This means that our confidence interval is not accuate.
+\medskip
+
+\noin (d) Repeat (c), except with the percentile interval.
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+set.seed(111)
+reps <- 10^4
+n <- 100
+B <- 200
+covered <- 0
+
+
+for (i in 1:reps){
+Y <- runif(n)
+theta_bootstrap <- replicate(B,max(sample(Y,n,replace=TRUE)))
+
+if(quantile(theta_bootstrap,0.025) < 1 && 1 < quantile(theta_bootstrap,0.975)){
+  covered <- covered + 1
+}
+}
+
+covered/reps
+```
+
+The only way for our coverage probability to be nonzero is if $\hat{\theta}=Y_{(n)}=1$. Howver, this happens with zero probability as $Y_{n}$ follows a continuous distribution.

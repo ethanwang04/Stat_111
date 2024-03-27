@@ -1,0 +1,706 @@
+---
+title: "Stat 111 Homework 4, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+**Due**: Friday 2/24 at 5:00 pm, submitted as a PDF via Gradescope. Make
+sure to assign to each question all the pages with your work on that
+question (*including code*). You can assign multiple pages to the same
+question, or the same page to multiple questions. After submitting your
+homework, *check your submission* to make sure everything you want
+graded is present, easily legible, and correctly assigned. No
+submissions on paper or by email will be accepted, and no extensions
+will be granted aside from the Monday extensions described in the
+syllabus.
+
+\noin Please show your work, simplify fully, and give clear, careful
+justifications for your answers (using *words and sentences* to explain
+your logic, in addition to the relevant mathematical expressions and/or
+code). When code is used, both the *outputs* (such as plots and summary
+statistics) and the *code* must be included in your submission.
+
+\bigskip
+
+\noin 1. There are $t$ teams that compete with each other in a certain
+sport. Each game ends in a win for one team and a loss for the other
+team (there are no ties). Let $p_{ij}$ be the probability that team $i$
+beats team $j$ when they play (for $i \neq j$). Assume the following
+model for the log-odds of team $i$ beating team $j$:
+$$ \log \left( \frac{p_{ij}}{1-p_{ij}} \right) = \theta_i - \theta_j,$$
+where $\theta_i$ is a parameter that is specific to team $i$.
+Intuitively, we can think of $\theta_i$ as the strength of team $i$.
+
+\medskip
+
+\noin A total of $n$ games will be played. Each game has a
+\emph{home team} and an \emph{away team} (the game is played in the home
+team's stadium). For simplicity we will assume there is no \`\`home
+court advantage", but it would not be hard to extend the model by
+introducing a parameter representing an advantage for the home team.
+
+\medskip
+
+\noin Let $Y_k$ be the indicator of the home team winning game $k$. Let
+$h(k)$ be the home team in game $k$ and $a(k)$ be the away team in game
+$k$. The games follow a pre-determined schedule of matchups, so $h(k)$
+and $a(k)$ are fixed and known. For example, if game 7 is played by team
+4 vs. team 9, with team 4 as the home team, then $h(7) = 4$, $a(7) = 9$,
+and $Y_7 \sim \Bern(p_{4,9})$ is the indicator of team 4 beating team 9
+in game 7.
+
+\medskip
+
+\noin The data will be the observed values of $Y_1,Y_2,\dots,Y_n$.
+Assume that the $Y_k$ are independent.
+
+\medskip
+
+\noin (a) Explain why the log-odds of team $i$ beating team $j$ in this
+model makes sense in the case $\theta_i = \theta_j$, in the case where
+$\theta_i$ is much larger than $\theta_j$, and in the case where
+$\theta_j$ is much larger than $\theta_i$. Also, check that
+$p_{ji} = 1 - p_{ij}$ (if this did not hold, the model would not make
+sense).
+
+\textbf{Solution:} We will examine each of these cases individually.
+
+First, we examine the case where $\theta_{i}=\theta_{j}$. In this case,
+our log-odds is
+
+$$
+\log(\frac{p_{ij}}{1-p_{ij}})=\theta_{i}-\theta_{j}=0\implies\frac{p_{ij}}{1-p_{ij}}=1\implies p_{ij}=\frac{1}{2}
+$$
+
+This answer intuitively makes sense as if the strength of each team is
+the same, then the chance for each one to win should be one half.
+
+Next, we examine the case where $\theta_{i}$ is much larger than
+$\theta_{j}$. If this is the case, then
+
+$$
+\log(\frac{p_{ij}}{1-p_{ij}})=\theta_{i}-\theta_{j}\approx\theta_{i}\implies p_{ij}=\frac{e^{\theta_{i}}}{1+e^{\theta_{i}}}
+$$
+
+When $\theta_{i}$ is large, the value
+$\frac{e^{\theta_{i}}}{1+e^{\theta_{i}}}$ approaches 1. Therefore, we
+conclude that $p_{ij}\approx 1$ when $\theta_{i}$ is much larger that
+$\theta_{j}$. This intuitively makes sense, as if team $i$ is much
+stronger relative to team $j$ then there is a very high chance that team
+$i$ wins.
+
+Next, we examine the case where $\theta_{j}$ is much larger than
+$\theta_{i}$. In this case, we have
+
+$$
+\log(\frac{p_{ij}}{1-p_{ij}})=\theta_{i}-\theta_{j}\approx-\theta_{j}\implies p_{ij}=\frac{e^{-\theta_{j}}}{1+e^{-\theta_{j}}}
+$$
+
+When $\theta_{j}$ is large, the value
+$\frac{e^{-\theta_{j}}}{1+e^{-\theta_{j}}}$ approaches to zero.
+Therefore, we conclude that $p_{ij}\approx 0$ when $\theta_{j}$ is much
+larger than $\theta_{i}$. This intuitively makes sense as if team $i$ is
+much weaker than team $j$, then the chance to win is very small.
+
+\medskip
+
+\noin (b) A parametric model with parameter $\thetabold$ is called
+\emph{identifiable} if there are not two distinct values of $\thetabold$
+that result in the same distribution for the data. Usually we want our
+models to be identifiable since, e.g., if $\thetabold_1$ and
+$\thetabold_2$ both produce the same distribution for the data, then the
+data would never allow us to distinguish between $\thetabold_1$ and
+$\thetabold_2$.
+
+\medskip
+
+\noin Show that the model in this problem is not identifiable. To make
+the model identifiable, we can choose a value for one of the $\theta_i$
+arbitrarily (you don't need to show that this makes the model
+identifiable). So for the rest of the problem, take $\theta_1 = 0$.
+
+\textbf{Solution:} Suppose we have
+$\thetabold=\{\theta_{1},\theta_{2},\dots,\theta_{n}\}$ and
+$\thetabold^{\dagger}=\{\theta_{1}+c,\theta_{2}+c,\dots,\theta_{n}+c\}$
+where $c$ is some arbitrary constant. We will also define
+$\thetabold_{i}$ and $\thetabold^{\dagger}_{i}$ to be the $ith$ element
+of each set. Then, we have
+
+$$
+\thetabold_{i}-\thetabold_{j}=\theta_{i}-\theta_{j}=\theta_{i}+c-\theta_{j}-c=\thetabold^{\dagger}_{i}-\thetabold^{\dagger}_{j}
+$$
+
+Therefore, it is impossible to distinguish between the $\thetabold$ and
+$\thetabold^{\dagger}$ which means that $\thetabold$ is not
+identifiable.
+
+\medskip
+
+\noin (c) Find the likelihood function $L(\thetabold; \mathbf{Y})$ and
+the log-likelihood function $\ell(\thetabold; \mathbf{Y})$.
+
+\textbf{Solution:} We know each
+$Y_{i}~\sim\Bern(\frac{e^{\theta_{h_{i}}-\theta_{a_{i}}}}{1+e^{\theta_{h_{i}}-\theta_{a_{j}}}})$
+where $h_{i}$ and $a_{i}$ represent the indices of the home and away
+team for the $ith$ game respectfully. Therefore, our likelihood function
+is
+
+$$
+L(\thetabold;\mathbf{Y})=\prod_{i=1}^{n} (\frac{e^{\theta_{h_{i}}-\theta_{a_{i}}}}{1+e^{\theta_{h_{i}}-\theta_{a_{j}}}})^{y_{i}}(\frac{1}{1+e^{\theta_{h_{i}}-\theta_{a_{j}}}})^{1-y_{i}}
+$$
+
+The log likelihood is then
+
+$$
+\ell(\thetabold; \textbf{Y})=\sum_{i=1}^{n}\ln((\frac{e^{\theta_{h_{i}}-\theta_{a_{i}}}}{1+e^{\theta_{h_{i}}-\theta_{a_{i}}}})^{y_{i}}(\frac{1}{1+e^{\theta_{h_{i}}-\theta_{a_{i}}}})^{1-y_{i}}).
+$$ Log properties and the fact that we are using natural log then allow
+us to do the following manipulations.
+
+$$
+\ell(\thetabold;\textbf{Y})=\sum_{i=1}^{n}[y_{i}(\ln(e^{\theta_{h_{i}}-\theta_{a_{i}}})-\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}})))+(1-y_{i})(-\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}}))]
+$$ $$
+=\sum_{i=1}^{n}[y_{i}\ln(e^{\theta_{h_{i}}-\theta_{a_{i}}})-y_{i}\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}})-\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}})+y_{i}\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}})]
+$$ $$
+\ell(\thetabold;\textbf{Y})=\sum_{i=1}^{n}[y_{i}(\theta_{h_{i}}-\theta_{a_{i}})-\ln(1+e^{\theta_{h_{i}}-\theta_{a_{i}}})]
+$$ \medskip
+
+\noin (d) The dataset \texttt{nba.csv} (on Canvas) has the scores of the
+$n=1230$ National Basketball Association (NBA) games from the $t = 30$
+teams that played in the 2021-2022 regular season. The data were
+obtained from
+\url{https://www.basketball-reference.com/leagues/NBA_2022_games.html}.
+The variables \texttt{HomeTeam} and \texttt{AwayTeam}, not surprisingly,
+give the names of the home team and the away team for a game, while
+\texttt{HomeTeamPoints} and \texttt{AwayTeamPoints} give the numbers of
+points scored in the game.
+
+\medskip
+
+\noin To avoid having a parameter called, e.g.,
+$\theta_{\textrm{Boston Celtics}}$, give each team an ID number from $1$
+to $30$ (in alphabetical order). The file \texttt{teamnames.csv} has the
+names and ID numbers of the teams. For example, the Boston Celtics have
+ID number 2 (due to being second alphabetically, after the Atlanta
+Hawks), and we let $\theta_2$ be the parameter for the Boston Celtics.
+The variables \texttt{HomeTeamID} and \texttt{AwayTeamID} in
+\texttt{nba.csv} give the ID numbers of the teams in a game.
+
+\medskip
+
+\noin The MLE of $\thetabold = (\theta_1,\theta_2,\dots,\theta_{30})$ is
+not available in closed form. Approximate the MLE of $\thetabold$
+numerically, using an iterative algorithm to maximize the
+log-likelihood. Take the initial guess to be a vector of all $0$'s. To
+optimize a function in \texttt{R} using a version of Newton's method,
+you can use the \texttt{optim} command with the argument
+\texttt{method = "BFGS"}. By default, \texttt{optim} minimizes a
+function; to maximize the function, you can either minimize its negative
+or use \texttt{control = list(fnscale = -1)} as an argument to
+\texttt{optim}.
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+#import data and initialize variables
+nba <- read.csv("NBA.csv")
+names <- read.csv("teamnames.csv")
+
+#create the log-likelihood function
+log_likelihood = function(theta) {
+  
+  sum(ifelse(nba$HomeTeamPoints>nba$AwayTeamPoints, 1, 0) *
+        (theta[nba$HomeTeamID] - theta[nba$AwayTeamID]) 
+      - log(1+exp(theta[nba$HomeTeamID]-theta[nba$AwayTeamID])))
+  
+}
+
+#Initialize guess of all theta values to be zero
+initial_thetas=rep(0,30)
+
+#optimize the model
+thetas = optim(initial_thetas, log_likelihood, method="BFGS", 
+               control = list(fnscale = -1))$par
+
+#print out the team names in alphabetical orders with the ID
+print(names)
+
+#normalize to the first theta
+thetas = thetas- thetas[1]
+
+#print out the MLEs for each theta, with the order that they are printed out 
+#as the order of the team ID's
+print(thetas)
+```
+
+
+\medskip
+
+\noin (e) Continuing (d), give a ranked list of the $10$ strongest teams
+according to the model, where strength is measured by the parameter
+value. Also find the estimated probability of the Boston Celtics beating
+the Los Angeles Lakers (assuming that the teams' strengths have not
+changed since the 2021-2022 season).
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+#Order by decreasing thetas and print out the first 10
+names$Name[order(-thetas)][1:10]
+
+#find the celtics and lakers team ID
+celticsID <- names$ID[which(names$Name == "Boston Celtics")]
+lakersID <- names$ID[which(names$Name == "Los Angeles Lakers")]
+
+#define the theta MLE
+theta_celtics_lakers = thetas[celticsID] - thetas[lakersID]
+
+#calculate probability and print
+exp(theta_celtics_lakers)/(1+exp(theta_celtics_lakers))
+```
+
+\medskip
+
+\noin (f) Discuss what the advantages are of using such a model,
+compared with (i) letting $p_{ij}$ be general parameters (with no
+$\theta_i$'s introduced and no relationship assumed between the
+$p_{ij}$, other than $p_{ji} = 1 - p_{ij}$), and (ii) not using a model
+at all, and instead just ranking teams by number of wins.
+
+\textbf{Solution:} We will examine each case individually
+
+(i) Pure probability as parameters takes a lot of noise into account. There are things like luck and injury that work their way into the naieve probability of winning, while having the strength in each $\theta_{i}$ aims to purely base the probability of winning off of whatever factors are taken into account when creating each $\theta_{i}$. This helps us predict future matchups better.
+
+(ii) The number of wins that a team has does not correlate to the strength of a team. For example, lets suppose there are two teams that are evenly matched. One team has a very easy schedule, playing teams that are much worse than them which leads to a higher number of wins. The other team has a very hard schedule, playing teams that are much better than them which leads to a lower number of wins. In this case, the proposed model will have the team with the easier schedule always winning while in reality the teams are evenly matched.
+
+\bigskip
+
+\noin 2. The lifetime of a certain type of electronic device is Weibull
+with rate parameter $\lambda$ and shape parameter $\gamma$, with
+$\lambda$ unknown but $\gamma$ known. We wish to estimate $\theta$, the
+median lifetime of one of the devices, based on observing i.i.d.
+$T_1,\dots,T_n \sim \textrm{Wei}(\lambda, \gamma)$. Recall that
+$T_j = X_j^{1/\gamma}$, with $X_j \sim \Expo(\lambda)$. Assume that $n$
+is odd.
+
+\medskip
+
+\noin (a) Find the Cramer-Rao lower bound for estimating $\theta$, and
+say in words what the interpretation of the bound is.
+
+\textbf{Solution:} To find the Cramer-Rao lower bound for $\theta$, we
+need to find the fisher information for $\theta$. To do so, we will find
+the fisher information for $\lambda$ and use parameter transformation.
+
+We know that if $T_{1},\dots, T_{n}\sim\textrm{Wei}(\lambda,\gamma)$,
+then there exists $x_{1},\dots,X_{n}\sim\Expo(\lambda)$ such that
+$X_{j}=T_{j}^{\gamma}$ for all $j\in\{1,2,\dots,n\}$. Our likelihood
+function for $\lambda$ is then
+
+$$
+L(\lambda;X_{1},\dots,X_{n})=\prod_{i=1}^{n}\lambda e^{-\lambda x_{i}}
+$$ Our log-likelihood is then
+
+$$
+\ell(\lambda; X_{1},\dots,X_{n})=\sum_{i=1}^{n}\ln(\lambda e^{-\lambda x_{i}})=n\ln(\lambda)-\lambda\sum_{i=1}^{n}x_{i}
+$$
+
+Our score function is then
+
+$$
+s(\lambda)=\frac{d\ell(\lambda;X_{1},\dots,X_{n})}{d\lambda}=\frac{n}{\lambda}-\sum_{i=1}^{n}x_{i}
+$$
+
+Taking the variance of this gives us the Fisher information for
+$\lambda$. We use the fact that each $X_{j}$ is i.i.d. to calculate this
+as follows
+
+$$
+\mathcal{I}(\lambda)=\mathcal{I}(s(\lambda))=\var(\sum_{i=1}^{n}x_{i})=n\var(X_{1})=\frac{n}{\lambda^{2}}
+$$
+
+Now, we use Fisher Information under parameter transformation to
+calculate $\mathcal{I}(\theta)$. Our first step is to find
+$g(\lambda)=\theta$. We know that $\theta$ is the median of the data, so
+our $g(x)$ is just $Q(\frac{1}{2})$. We have calculated the quartile
+function of Weibull data in pset 2 question 3, so we plug in our
+calculated quartile function to get
+
+$$
+\theta=Q(\frac{1}{2})=(\frac{\ln(1-\frac{1}{2})}{-\lambda})^{\frac{1}{\gamma}}=(\frac{\ln(2)}{\lambda})^{\frac{1}{\gamma}}
+$$
+
+Therefore, we have
+$g(\lambda)=(\frac{\ln(2)}{\lambda})^{\frac{1}{\gamma}}=\theta$. We then
+calculate the first derivative to get
+
+$$
+g'(\theta)=\frac{1}{\gamma}(\frac{\ln(2)}{\lambda})^{\frac{1-\gamma}{\gamma}}\ln(2)(-\frac{1}{\lambda^{2}})=-\frac{1}{\gamma}\ln(2)^{\frac{1}{\gamma}}\frac{1}{\lambda^{\frac{1+\gamma}{\gamma}}}
+$$
+
+We then plug this value into the Fisher Information transformation to
+get
+
+$$
+\mathcal{I}(\theta)=\frac{\mathcal{I}(\lambda)}{(g'(\lambda))^{2}}=\frac{\frac{n}{\lambda^{2}}}{(-\frac{1}{\gamma}\ln(2)^{\frac{1}{\gamma}}\frac{1}{\lambda^{\frac{1+\gamma}{\gamma}}})^{2}}=\frac{n\gamma^{2}\lambda^{\frac{2}{\gamma}}}{\ln(2)^{\frac{2}{\gamma}}}
+$$
+
+Note that
+$\frac{\lambda^{\frac{2}{\lambda}}}{\ln(2)^{\frac{2}{\gamma}}}=\frac{1}{\theta^{2}}$.
+Substituting this in gives
+$\mathcal{I}(\theta)=\frac{n\gamma^{2}}{\theta^{2}}$. Therefore, our
+Camer-Rao Lower bound for variance is
+
+$$
+\frac{1}{\mathcal{I}(\theta)}=\frac{\theta^{2}}{n\gamma^{2}}
+$$
+
+This means that the lower bound for the MSE of $\theta$ is
+$\frac{\theta^{2}}{n\gamma^{2}}$ for unbiased estimators. \medskip
+
+\noin (b) Find the MLE $\hat{\theta}$ of $\theta$.
+
+\textbf{Solution:} We will find $\hat{\lambda}$ and use invariance of
+the MLE to find $\hat{\theta}$. To find $\hat{\lambda}$, we will set the
+score function for $\lambda$ equal to zero and solve for lambda.
+
+$$
+s(\lambda)=\frac{n}{\lambda}-\sum_{i=1}^{n}x_{i}=0\implies\lambda=\frac{n}{\sum_{i=1}^{n}x_{i}}\implies\hat{\lambda}=\frac{1}{\overline{X}}
+$$
+
+In the above equation, we define
+$\overline{X}=\frac{1}{n}\sum_{i=1}^{n}X_{i}$ as the sample mean. We
+then plug $\hat{\lambda}$ into our function $g(\lambda)=\theta$
+calculated in part (a) to get $\hat{\theta}$. This results in
+
+$$
+\hat{\theta}=g(\hat{\lambda})=(\frac{\ln(2)}{\hat{\lambda}})^{\frac{1}{\gamma}}=(\ln(2)\overline{X})^{\frac{1}{\gamma}}
+$$
+
+\medskip
+
+\noin (c) Construct a 95% confidence interval for $\theta$ (based on
+exact distributions, not asymptotics). Express your answer in terms of
+the quantile function of a famous distribution.
+
+\smallskip
+
+\noin Hint: What is the distribution of $\lambda n \bar{X}$?
+
+\textbf{Solution:} We know that $n\bar{X}=\sum_{i=1}^{n}X_{i}$. We also know that each $X_{j}$ is i.i.d. $\Expo(\lambda)$ which means that $n\overline{X}=\sum_{i=1}^{n}X_{i}\sim\Gamma(n,\lambda)$. Multiplying by a constant $\lambda$ then makes this $\lambda n\bar{X}\sim\Gamma(n,1)$. We then use this as our pivot to write
+
+$$
+P(Q_{gamma(n,1)}(0.0025)\leq\lambda n\bar{X}\leq Q_{gamma(n,1)}(0.99975))=0.95
+$$
+
+Dividing by $n\overline{X}$ on both sides gives
+
+$$
+P(\frac{Q_{gamma(n,1)}(0.0025)}{n\bar{X}}\leq\lambda\leq \frac{Q_{gamma(n,1)}(0.99975)}{n\bar{X}})=0.95
+$$
+
+Then applying our function $g(\lambda)$ to each side gives the following. Note that the inequality order is switched as $g(\lambda)$ is monotone decreasing.
+
+$$
+P((\frac{\ln(2)n\bar{X}}{Q_{gamma(n,1)}(0.9975)})^{\frac{1}{\gamma}}\leq\theta\leq(\frac{\ln(2)n\bar{X}}{Q_{gamma(n,1)}(0.0025)})^{\frac{1}{\gamma}})=0.95
+$$
+
+Therefore, our $95\%$ confidence interval is $[(\frac{\ln(2)n\bar{X}}{Q_{gamma(n,1)}(0.9975)})^{\frac{1}{\gamma}},(\frac{\ln(2)n\bar{X}}{Q_{gamma(n,1)}(0.0025)})^{\frac{1}{\gamma}}]$.
+\medskip
+
+\noin (d) Another natural way to estimate the theoretical median
+$\theta$ is with the sample median, which is the order statistic
+$T_{((n+1)/2)}$. Compare the performance of the MLE to that of the
+sample median, via simulation. In your simulations, let the true
+parameter values be $\lambda = 3$ and $\gamma = 1.11$, and compare the
+MSEs of the two estimators for $n=11$ and $n=111$, based on at least
+$10^4$ replications for each of these sample sizes.
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+#set seed and intialize variables
+set.seed(111)
+n <- 10^4
+mle_11=rep(0,n)
+mle_111=rep(0,n)
+sample_11=rep(0,n)
+sample_111=rep(0,n)
+
+#create the sample estimators and the theoretical estimators
+for (i in 1:n){
+  eleven = rweibull(11,1.11,3^(-1/1.11))
+  oneEleven = rweibull(111, 1.11, 3^(-1/1.11))
+  
+  sample_11[i]=median(eleven)
+  sample_111[i]=median(oneEleven)
+  
+  mle_11[i] = log(2)^(1/1.11) * mean(eleven)
+  mle_111[i] = log(2)^(1/1.11) * mean(oneEleven)
+}
+
+#Calculate theoretical estimator
+t = rep(qweibull(0.5,1.11,3^(-1/1.11)), 10^4)
+
+#calculate each MSE
+sample_mse_11 = (1/(10^4)) * sum((t-sample_11)^2)
+sample_mse_111 = (1/(10^4)) * sum((t-sample_111)^2)
+mle_mse_11 = (1/(10^4)) * sum((t-mle_11)^2)
+mle_mse_111 = (1/(10^4)) * sum((t-mle_111)^2)
+
+#print out each value
+sample_mse_11
+sample_mse_111
+mle_mse_11
+mle_mse_111
+
+```
+
+\bigskip
+
+\noin 3. Let $Y_1,\dots,Y_n$ be i.i.d. $\Bern(p)$, with $p$ unknown. Let
+the estimand $\theta$ be the log-odds:
+$$ \theta = \log \left( \frac{p}{1-p}\right).$$ Let $\hat{p}$ and
+$\hat{\theta}$ be the MLEs of $p$ and $\theta$, respectively.
+
+\medskip
+
+\noin (a) Find the asymptotic distribution of $\hat{p}$, i.e., show that
+$\sqrt{n}(\hat{p} - \mu)$ converges in distribution to
+$\N(0, \omega^2)$, for some $\mu$ and $\omega$ (which you should specify
+in terms of $p$).
+
+\textbf{Solution:} We will first calculate $\hat{p}$. As each $Y_{j}\sim\Bern(p)$, we have
+
+$$
+L(p;y_{1},\dots,y_{n})=\prod_{i=1}^{n}p^{y_{i}}(1-p)^{1-y_{i}}
+$$
+
+This means that
+
+$$
+\ell(p;y_{1},\dots,y_{n})=\sum_{i=1}^{n}[y_{i}\ln p]+\sum_{i=1}^{n}[(1-y_{i})\ln(1-p)]
+$$
+
+Taking the first derivative with respect to $p$, setting it equal to zero and solving for $p$ gives
+
+$$
+\frac{d\ell(p;y_{1},\dots,y_{n})}{dp}=\frac{1}{p}\sum_{i=1}^{n}[y_{i}]-\frac{1}{1-p}\sum_{i=1}^{n}(1-y_{i})=0\implies p=\frac{1}{n}\sum_{i=1}^{n}y_{i}
+$$
+
+Therefore, we have $\hat{y}=\frac{1}{n}\sum_{i=1}^{n}Y_{i}=\bar{Y}$. Once we have this, we can use CLT to conclude that $\sqrt{n}(\hat{p}-\bar{Y})\xrightarrow{d}\mathcal{N}(0,p(1-p))$. Note that the $p(1-p)$ term comes from the fact that the variance of a $\Bern(p)$ random variable is $p(1-p)$. Therefore, our $\mu=\bar{Y}$ and $\omega=\sqrt{p(1-p)}$.
+
+\medskip
+
+\noin (b) Find the asymptotic distribution of $\hat{\theta}$ in two
+different ways: using the delta method, and using the general result for
+the asymptotic distribution of an MLE.
+
+\textbf{Solution:} We will first use the delta method. First note that we define $g(p)=\log(\frac{p}{1-p})$. Then we calculate the derivative to get $g'(p)=\frac{1}{p(1-p)}$. Then, the delta method gives
+
+$$
+\sqrt{n}(\hat{\theta}-\theta)\xrightarrow{d}\mathcal{N}(0,g'(p)^{2}p(1-p))
+$$
+
+Plugging in our value for $g'(p)$ gives
+
+$$
+\sqrt{n}(\hat{\theta}-\theta)\xrightarrow{d}\mathcal{N}(0,\frac{1}{p(1-p)})
+$$
+
+We now use the asymptotic distribution for an MLE. to do so, we will need to find the CRLB for $\hat{\theta}$. To do so, we will first find the fisher information for $\hat{p}$ and then reparameterize to get the fisher information of $\hat{\theta}$ to then get the CLRB. We know that $s(p;y_{1},\dots,y_{n})=\frac{1}{p}\sum_{i=1}^{n}[y_{i}]-\frac{1}{1-p}\sum_{i=1}^{n}(1-y_{i})$. We are only interested in the Fisher information of one observation, so we only examine $s(p;y_{1})=\frac{1}{p}y_{1}-\frac{1}{1-p}(1-y_{1})$ We also know that $\var(s(p;y_{1})=-E(s'(p;y_{1})$ when regularity conditions hold. With this, we calculate the first derivative of the score function to get
+
+$$
+s'(p;y_{1})=-\frac{y_{1}}{p^{2}}-\frac{1-y_{1}}{(1-p)^{2}}
+$$
+
+We know by fundamental bridge that $E(y_{1}=p$. Then, we have
+
+$$
+-E(s'(p;y_{1})=E(\frac{y_{1}}{p^{2}}+\frac{1-y_{1}}{(1-p)^{2}})=\frac{p}{p^{2}}+\frac{1-p}{(1-p)^{2}}=\frac{1}{p}+\frac{1}{1-p}=\frac{1}{p(1-p)}
+$$
+
+Therefore, we have $\mathcal{I}_{Y_{1}}(p)=\frac{1}{p(1-p)}$. We then use Fisher information transformation to find $\mathcal{I}_{Y_{1}}(\theta)$. We use our $g'(p)^{2}=\frac{1}{p^{2}(1-p)^{2}}$ to write
+
+$$
+\mathcal{I}_{Y_{1}}(\theta)=\frac{\frac{1}{p(1-p)}}{\frac{1}{p^{2}(1-p)^{2}}}=p(1-p).
+$$
+
+Then the Asymptotic Distribution of the MLE gives
+
+$$
+\sqrt{n}(\hat{\theta}-\theta)\xrightarrow{d}\mathcal{N}(0,\frac{1}{p(1-p)})
+$$
+
+This is the same asymptotic distribution as found using the delta method.
+\medskip
+
+\noin (c) Use the result of (b) to obtain an approximate 95% confidence
+interval for $\theta$, for $n$ large.
+
+\textbf{Solution:} We use our asymptotic distributions calculated in part (b) to pivot around $\sqrt{n}(\hat{\theta}-\theta)$. This gives us a $95%$ confidence interval for $\theta$ as $[\hat{\theta}-\frac{1.96\sqrt{\frac{1}{1-p}}}{\sqrt{n}},\hat{\theta}+\frac{1.96\sqrt{\frac{1}{1-p}}}{\sqrt{n}}]$. Therefore, our CI is $[\hat{\theta}-\frac{1.96}{\sqrt{np(1-p)}},\hat{\theta}-\frac{1.96}{\sqrt{np(1-p)}}]$.
+
+\medskip
+
+\noin (d) Let $\tau = p/(1-p)$ be the odds. Is exponentiating the
+endpoints of the interval from (c) a valid way to construct an
+approximate 95% confidence interval for $\tau$, for $n$ large?
+
+\textbf{Solution:} This is valid. This is because $f(x)=e^{x}$ is monotonically increasing and injective, which means that the events $e^{y}<e^{x}$ and $y<x$ are equivalent. Therefore, exponentiating the bounds found in part $c$ will result in a valid $95%$ confidence interval for $\tau$.
+
+\bigskip
+
+\noin 4. An archaeologist is studying a civilization that collapsed at
+some time in the past. It is known when it collapsed, but no one knows
+when it was born. The archaeologist wants to estimate the length of the
+time interval in which the civilization existed. Call this $\theta$. She
+collects $n$ relics from the civilization.
+
+\medskip
+
+\noin Suppose that she is able to determine when each of these relics
+was made, and that these times are i.i.d. and uniform over the interval
+in which the civilization existed. Let $Y_j$ be when (in years after the
+birth of the civilization) the $j$th relic was made, with
+$Y_1,\dots,Y_n$ i.i.d. $\Unif(0,\theta)$.
+
+\medskip
+
+\noin (a) Discuss the plausibility (or lack thereof) of the assumptions
+that $Y_j$ are independent, that they are identically distributed, and
+that they are $\Unif(0,\theta)$.
+
+\textbf{Solution:} We will examine independence, identically distributed, and uniform distribution individually.
+
+Independence: As societies advance, so do trends and styles. Relics made for similar purposes with similar designs and styles would tend to be made around the same time, so the times are not independent.
+
+Identically distributed: Older relics will decay with time, so it is more difficult to find them. Therefore, they will not have the same distribution as the newer relics.
+
+Uniform Distribution: The capacity of a civilization to create these relics should increase over time, so there will be more relics closer to the end of the civilizaiton which means they are not uniformly distributed.
+
+\medskip
+
+\noin (b) Show that the MLE of $\theta$ is
+$\hat{\theta} = \max(Y_1,\dots,Y_n)$.
+
+\textbf{Solution:} First note that our $\theta\geq\max(Y_{1},Y_{2},\dots,Y_{n})$. This is because if it is not, then there is at least one $Y_{i}$ which is outside of the support of $\Unif(0,\theta)$. Our likelihood function is
+
+$$
+L(\theta;y_{1},\dots,y_{n})=\frac{1}{\theta^{n}}
+$$
+
+The value that maximizes this is going to be the smallest possible value of $\theta$. Based on the fact that $\theta\geq\max(Y_{1},Y_{2},\dots,Y_{n})$, we conclude that our MLE $\hat{\theta}=\max{y_{1},\dots,y_{n}}$
+
+\medskip
+
+\noin (c) Find the distribution of $\hat{\theta}/\theta$. Using this
+result, find the MSE of $\hat{\theta}$.
+
+\textbf{Solution}: We know that $Y_{i}/\theta\sim\Unif(0,1)$ by scaling of the uniform distribution. Then, we know that $\hat{\theta}/\theta\sim\Bin(n,1)$ as it is the $n$th order statistic out of $n$ i.i.d. standard normal random variables. We then use the properties of the Beta distribution to calculate the bias, varience, and MSE of $\hat{\theta}$.
+
+$$
+\mathrm{Bias}(\hat{\theta})=E(\hat{\theta})-\theta=\theta E(\frac{\hat{\theta}}{\theta})-\theta=\theta(\frac{n}{n+1})-\theta=-\frac{\theta}{n+1}
+$$
+$$
+\var(\hat{\theta})=\theta^{2}\var(\frac{\hat{\theta}}{\theta})=\theta^{2}\frac{n}{(n+1)^{2}(n+2)}
+$$
+
+Now we calculate the MSE.
+
+$$
+\mathrm{MSE}(\hat{\theta})=\mathrm{Bias}(\hat{\theta})^{2}+\var(\hat{\theta})=\frac{\theta^{2}}{(n+1)^{2}}+\frac{\theta^{2}n}{(n+1)^{2}(n+2)}
+$$
+\medskip
+
+\noin (d) Find the constant $c$ that makes the estimator
+$c \cdot \max(Y_1,\dots,Y_n)$ for $\theta$ have the smallest possible
+MSE.
+
+\textbf{Solution:} We replace our $\hat{\theta}$ with $c\hat{\theta}$ in the above calculations and solve for the MSE again. This yields
+
+$$
+\mathrm{Bias}(c\hat{\theta})=E(c\hat{\theta})-\theta=c\theta E(\frac{\hat{\theta}}{\theta})-\theta=c\theta(\frac{n}{n+1})-\theta=-\frac{\theta(cn-n-1)}{n+1}
+$$
+$$
+\var(c\hat{\theta})=c^{2}\theta^{2}\var(\frac{\hat{\theta}}{\theta})=c^{2}\theta^{2}\frac{n}{(n+1)^{2}(n+2)}
+$$
+
+Now we calculate the MSE.
+
+$$
+\mathrm{MSE}(\hat{c\theta})=\mathrm{Bias}(c\hat{\theta})^{2}+\var(c\hat{\theta})=\frac{\theta^{2}(n(c-1)-1)^{2}}{(n+1)^{2}}+\frac{c^{2}\theta^{2}n}{(n+1)^{2}(n+2)}
+$$
+
+To find the value of $c$ that minimizes the MSE, we take the first derivative and set it equal to zero, and then solve for $c$.
+
+$$
+\frac{\partial MSE(c\hat{\theta})}{\partial c}=\frac{\theta^{2}}{(n+1)^{2}}2(n(c-1)-1)+\frac{2c\theta^{2}n}{(n+1)^{2}(n+2)}=0
+$$
+$$
+2\theta^{2}(n+2)(n(c-1)-1)+2c\theta^{2}n=0
+$$
+As $\theta\neq0$, we can divide by $\theta^{2}$ on both sides to get 
+
+$$
+2(n+2)(nc-n-1)+2cn=0
+$$
+$$
+2(n+1)nc+2nc=2(n+2)(n+1)\implies c=\frac{(n+2)(n+1)}{(n+1)^{2}}=\frac{n+2}{n+1}
+$$
+
+Therefore, the value of $c$ that minimizes the MSE of $c\hat{\theta}$ is $c=\frac{n+2}{n+1}$
+\medskip
+
+\noin (e) Construct a 95% confidence interval for $\theta$ (based on
+exact distributions, not asymptotics). Express your answer in terms of
+the quantile function of a famous distribution.
+
+\textbf{Solution:} We found in part (c) that $\hat{\theta}/\theta\sim\Beta(n,1)$. We then use $\hat{\theta}/\theta$ as our pivot to write
+
+$$
+P(Q_{\Beta(n,1)}(0.0025)\leq\frac{\max(Y_{1},\dots,Y_{n})}{\theta}\leq Q_{\Beta(n,1)}(0.9975))=0.95
+$$
+Algebraic manipulation then gives
+
+$$
+P(\frac{\max(Y_{1},\dots,Y_{n})}{Q_{\Beta(n,1)}(0.9975)}\leq\theta\leq\frac{\max(Y_{1},\dots,Y_{n})}{Q_{\Beta(n,1)}(0.0025)})=0.95
+$$
+
+Therefore, our exact 95% confidence interval is $[\frac{\max(Y_{1},\dots,Y_{n})}{Q_{\Beta(n,1)}(0.9975)},\frac{\max(Y_{1},\dots,Y_{n})}{Q_{\Beta(n,1)}(0.0025)}]$.

@@ -1,0 +1,518 @@
+---
+title: "Stat 111 Homework 9, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\SE}{\textnormal{SE}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\thetabold}{\mbox{\boldmath$\theta$}}   
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 4/14 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\bigskip
+
+\noin 1. A sabermetrician wants to estimate the batting averages of $k > 3$ baseball players, based on data from early in the season. Let $\mu_j$ be the theoretical batting average of player $j$ (i.e., the number of hits divided by number of times at bat that would result from a hypothetical very large number of times at bat).  Let $Y_j$ be the proportion of hits that player $j$ gets out of $n$ times at bat (i.e., the number of hits divided by $n$). It would be natural to model the number of hits as Binomial, but for simplicity and to connect with material discussed in class, we will use a Normal approximation to the Binomial. Assume the following model:
+$$Y_j | \mu_j \sim \N(\mu_j,\sigma^2), \textrm{ for } j = 1,2, \dots, k,$$
+with $Y_1,\dots,Y_k$ conditionally independent given $\mu_1,\dots,\mu_k$. A priori, let the $\mu_j$ be i.i.d.~with
+$$\mu_j \sim \N(\mu_0,\tau^2_0).$$
+For now, assume that $\sigma^2,\mu_0,$ and $\tau^2_0$ are known constants. Let the loss function for estimating $\mubold$ with $\hat{\mubold}$ be the total squared error loss, i.e.,
+$$\textrm{Loss}(\mubold, \hat{\mubold}) = \sum_{i=1}^k (\mubold_i - \hat{\mubold}_i)^2.$$
+
+\medskip
+
+\noin (a) What is the MLE $\hat{\mubold}_{\textnormal{MLE}}$ of $\mubold$? Find the risk function $R_{\textnormal{MLE}}(\mubold)$ (expected loss, treating $\mubold$ as fixed and $\mathbf{Y}$ as random) of the MLE $\hat{\mubold}_{\textnormal{MLE}}$.
+
+\textbf{Solution:} We have $Y_{j}|\mubold_{j}\sim\mathcal{N}(\mubold_{j},\sigma^{2})$. Then, we use the normal PDF to write the following likelihood function.
+
+$$
+L(\mubold)=\prod_{j=1}^{k}\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{1}{2}(\frac{y_{j}-\mubold_{j}}{\sigma})^{2}}
+$$
+
+We could drop constants, find log-likelihood, set score function equal to zero and solve for each $\mubold_{j}$. However, we can alternative note that the exponential function is monotonically increasing, so the MLE is the value that maximizes the exponent $-\frac{1}{2}(\frac{y_{j}-\mubold_{j}}{\sigma})^{2}$. Note that this is maximized when $y_{j}=\mubold_{j}$ as squares are always nonnegative. Therefore, our MLE is $\hat{\mubold}_{MLE}=(Y_{1},Y_{2},\dots,Y_{k})$
+
+We will now find the risk function $R_{MLE}(\hat{\mubold}_{MLE})$. The calculations are shown below
+
+$$
+R_{MLE}(\mubold)=E(C(\mubold,\hat{\mubold}_{MLE})|\mubold)=E(\sum_{i=1}^k (\mubold_i - \hat{\mubold}_i)^2|\mubold)
+$$
+$$
+=E(\sum_{i=1}^k (\mubold_i - Y_{i})^2|\mubold)=\sum_{i=1}^{k}E((Y_{i}-\mubold_{i})^{2}|\mubold)
+$$
+
+This is just the sum of the variances of $Y_{i}|\mubold_{i}$. Therefore, we conclude that $R_{MLE}(\mubold)=\sum_{i=1}^{k}\Var(Y_{i}|\mubold_{i})=k\sigma^{2}$.
+
+\medskip
+
+\noin (b) Find the risk function $R_{\textnormal{Bayes}}(\mubold)$ of the estimator $\hat{\mubold}_{\textnormal{Bayes}}$ whose $j$th component is the posterior mean of $\mu_j$,
+$$E(\mu_j | \mathbf{Y}) =  b \mu_0 + (1-b) Y_j,$$
+where $b = \sigma^2/(\sigma^2+\tau^2_0)$. Is the risk larger than, smaller than, or equal to the risk from (a), or does this depend on $\mubold$? 
+
+\textbf{Solution:} We will go through the same calculations as before. We use linearity of expectation and the definition of variance to do our calculations.
+
+$$
+R_{Bayes}=E(C(\mubold,\hat{\mubold}_{Bayes})|\mubold)=\sum_{j=1}^{k}E((\mubold_{j}-b\mubold_{0}-(1-b)Y_{j})^{2}|\mubold_{j})
+$$
+$$
+=\sum_{j=1}^{k}E((b\mubold_{0}+(1-b)Y_{j}-\mubold_{j})^{2}|\mubold)=\sum_{j=1}^{k}E((b(\mubold_{0}-\mubold_{j})+(1-b)(Y_{j}-\mubold_{j}))^{2}|\mubold)
+$$
+$$
+=\sum_{j=1}^{k}E(b^{2}(\mubold_{0}-\mubold_{j})^{2}+2b(\mubold_{0}-\mubold_{j})(1-b)(Y_{j}-\mubold_{j})+(1-b)^{2}(Y_{j}-\mubold_{j})^{2}|\mubold)
+$$
+$$
+\sum_{j=1}^{k}[b^{2}(\mubold_{0}-\mubold_{j})^{2}+(1-b)^{2}\sigma^{2}]=b^{2}\sum_{j=1}^{k}(\mubold_{0}-\mubold_{j})^{2}+k(1-b)^{2}\sigma^{2}
+$$
+
+Therefore, we have our risk function at $R_{\textnormal{Bayes}}(\mubold)=b^{2}\sum_{j=1}^{k}(\mubold_{0}-\mubold_{j})^{2}+k(1-b)^{2}\sigma^{2}$.
+
+We will now see how this risk compares to the risk of the MLE calculated in part (a). We can make the risk less than the risk of the MLE by setting $\mu_{j}=\mu_{0}$ for all $j\in\{1,2,\dots,k\}$. This is because then the first term in our Bayes loss would be zero, making the total loss $k(1-b)^{2}\sigma^{2}$ which is less than the $k\sigma^{2}$ calculated in part (a) as $b<1$.
+
+However, we can also make the Bayes risk greater than the MLE risk. This can be done by sufficiently choosing each $\mubold_{j}$ such that $\mubold_{j}>>\mubold_{0}$. Therefore, the first term in our Bayes loss can be made large enough such that $R_{Bayes}(\mubold)>R_{MLE}(\mubold)$. Therefore, the loss depends on the value of $\mubold$.
+
+\medskip
+
+\noin (c) Explain intuitively why $\hat{\mubold}_{\textnormal{Bayes}}$  does not use any of the $Y_i$ with $i \neq j$ when estimating $\mu_j$, but also why if we do \emph{not} know $\mu_0$ then all of the $Y_i$'s \emph{are} relevant when estimating $\mu_j$. 
+
+\textbf{Solution:} If we know $\mubold_{0}$, then every other $\mubold_{i}$ with $i\in\{1,2,\dots,k\}$ are independent. Therefore, knowing $\mubold_{i}$ gives no information on $\mubold_{j}$ for $i\neq j$.
+
+However, if $\mubold_{0}$ is unknown, then any $\mubold_{i}$ gives information on $\mubold_{0}$ which then helps estimate any $\mubold_{j}$ for $i\neq j$. Therefore, every single $\mubold_{i}$ gives information so all $Y_{i}$ need to be know to get the best estimate for $\mubold_{j}$.
+
+\medskip
+
+\noin (d) For the remainder of this problem, assume that the hyperparameters $\mu_0$ and $\tau^2_0$ are unknown, though $\sigma^2$ is still known. In class we discussed the James-Stein estimator that shrinks the MLE toward $0$. If we know $\mu_0$, it would make more sense to shrink toward $\mu_0$ rather than toward $0$. Since the marginal distribution of $Y_i$ is
+$$Y_j \sim \N(\mu_0, \sigma^2 + \tau^2_0),$$
+we will estimate  $\mu_0$  with $\bar{Y}$ and shrink the MLE toward $\bar{Y}$. Let
+$$S = \sum_{i=1}^k (Y_i - \bar{Y})^2.$$
+Show that
+$$\hat{b} = \frac{(k-3)\sigma^2}{S}$$
+is an unbiased estimator for $b$. The James-Stein estimator $\hat{\mubold}_{\textnormal{JS}}$ is then obtained from $\hat{\mubold}_{\textnormal{Bayes}}$ by replacing $\mu_0$ by $\bar{Y}$ and $b$ by $\hat{b}$:
+$$\hat{\mu}_{j, \textnormal{JS}} = \hat{b} \bar{Y} + (1 - \hat{b}) Y_j.$$
+
+\textbf{Solution:} Based on the given distribution and Biohazard 2.3.3 in the Stat 111 textbook, we can write
+
+$$
+\frac{k-1}{\sigma^{2}+\tau_{0}^{2}}(\frac{1}{k-1}\sum_{j=1}^{k-1}(Y_{j}-\bar{Y}))\sim\chi_{k-1}^{2}
+$$
+
+We then substitute in our value of $S$ and simplify to get
+
+$$
+\frac{S}{\sigma^{2}+\tau_{0}^{2}}\sim\chi^{2}_{k-1}
+$$
+
+We know from Stat 110 that $\chi_{k-1}^{2}$ is the same as $\Gam(\frac{k-1}{2},\frac{1}{2})$. Therefore, we can use scaling properties of the Gamma distribution to write
+
+$$
+S\sim\Gam(\frac{k-1}{2},\frac{1}{2(\sigma^{2}+\tau_{0}^{2})})
+$$
+
+Now, we will show that $E(\hat{b})=b$ to prove that $\hat{b}$ is unbiased. Note that in the following calculations, we will define $\alpha=\frac{k-1}{2}$ and $\beta=\frac{1}{2(\sigma^{2}+\tau_{0}^{2})}$.
+
+$$
+E(\hat{b})=(k-3)\sigma^{2}E(\frac{1}{S})
+$$
+
+Then, LOTUS lets us write
+
+$$
+E(\frac{1}{S})=\int_{0}^{\infty}\frac{1}{\Gamma(\alpha)}\beta^{\alpha}s^{\alpha-2}e^{-\beta s}ds
+$$
+$$
+=\frac{\beta\Gamma(\alpha-1)}{\Gamma(\alpha)}\int_{0}^{\infty}\frac{1}{\Gamma(\alpha)}\beta^{\alpha-1}s^{\alpha-1-1}e^{-\beta s}ds=\frac{\beta\Gamma(\alpha-1)}{\Gamma(\alpha)}=\frac{\beta}{\alpha-1}
+$$
+
+Note that we get rid of the integral as it is the integral of the PDF of a $\Gam(\alpha-1,\beta)$ random variable over its support, which is equal to $1$.
+
+Now, we plug this back into our equation for $E(\hat{b})$ and our definitions of $\alpha$ and $\beta$ to get
+
+$$
+E(\hat{b})=(k-3)\sigma^{2}\frac{\frac{1}{2(\sigma^{2}+\tau_{0}^{2})}}{\frac{k-1}{2}-1}=(k-3)\sigma^{2}\frac{k-3}{\sigma^{2}+\tau_{0}^{2}}=\frac{\sigma^{2}}{\sigma^{2}+\tau_{0}^{2}}=b
+$$
+
+Thus, we have $E(\hat{b})=b$ which proves that $\hat{b}$ is unbiased.
+
+\medskip
+
+\noin (e) Brad Efron and Carl Morris used a baseball example to show that James-Stein estimation can work well in practice, in addition to being a surprising theoretical concept. The dataset \texttt{battingaverages.csv} on Canvas, which is from their paper  \emph{Data Analysis Using Stein's Estimator and its Generalizations} (Journal of the American Statistical Association, 1975), gives information about 18 Major League Baseball players from the 1970 season. The variable \texttt{hits1} gives the number of hits in the player's first $n = 45$ times at bat. The variable $\mu$ gives the player's batting average for the remainder of the season. Almost all of the players had several hundred at bats in the remainder of the season, so assume the $\mu$ variable for player $j$ is in fact the true $\mu_j$ that we are trying to estimate based on the players' first 45 at bats.
+
+\medskip
+
+\noin Suppose for simplicity that it is known that $\sigma^2=\bar{y}(1-\bar{y})/45$, as motivated by the fact that the MLE $\hat{p}$ for $p$ based on a $\Bin(n,p)$ observation has variance $p(1-p)/n$. Compute the James-Stein estimate developed in (d), for each of the 18 baseball players. For what percentage of the baseball players is the James-Stein estimate closer to the true $\mu_i$ than the MLE? Also find the total squared error loss for the James-Stein estimate and the MLE. How do they compare?
+
+\textbf{Solution:} The R code for the simulation is shown below.
+
+```{r}
+baseball <- read.csv("battingaverages.csv")
+
+mu <- baseball$mu
+Y <- baseball$hits1 / 45
+sigma2 <- mean(Y) * (1-mean(Y)) / 45
+S <- sum((Y-mean(Y))^2)
+b_est <- (length(baseball$hits1)-3) * sigma2 / S
+
+mle <- Y
+JS <- b_est * mean(Y) + (1-b_est) * Y
+
+#print out the proportion of players for which 
+#the JS estimator is closer to the true mean
+#than the MLE
+mean(abs(mu-JS)<=abs(mu-mle))
+
+#calculate the losses of each
+sum((JS-mu)^2)
+sum((mle-mu)^2)
+```
+
+The James-Stien estimate is closer to the true mean than the MLE for $0.8889$ of baseball players, which is approximately 16 players in the dataset. We also see that the James-Stien estimator has a lower loss with $0.02137475$ as compared to the $0.07548795$ of the MLE.
+
+\bigskip
+
+\noin 2. A treasure trove consisting of $N$ gems has just been discovered. The gems have been labeled $1,2,\dots,N$, and each gem has gotten a quick, rough appraisal. Let $v_i$ be the true value of gem $i$ and $b_i$ be the appraised value of gem $i$. Currently, $N$ is known and the $b_i$ are known, but the $v_i$ are unknown.  Let
+$$v_{\textrm{total}} = v_1 + \dots + v_N, \textrm{ and } b_{\textrm{total}} = b_1 + \dots + b_N.$$
+We wish to estimate $v_{\textrm{total}}$, the true total value of the gems. Let
+$$\mu = \frac{1}{N} \sum_{i=1}^N v_i, \textrm{ and } \sigma = \sqrt{ \frac{1}{N}
+\sum_{i=1}^{N}\left( v_{i}-\mu \right)^{2}}$$
+be the mean and standard deviation of the true values of the gems.
+
+\medskip
+
+\noin A simple random sample (without replacement) of size $n$ gems will be obtained and, through very careful inspection, the true values of the gems in the sample will be determined. Let $\bar{V}$ be the sample mean of the true values of the gems in the sample. Let $\bar{D}$ be the sample mean of the \emph{differences} between true value and appraised value for the gems in the sample (i.e., if gem $i$ is in the sample then $v_i - b_i$ is one of the $n$ quantities that get averaged to form $\bar{D}$). 
+
+\medskip
+
+\noin (a) Find the mean and variance of the estimator $N \bar{V}$.
+
+
+\textbf{Solution:} We will calculate the expectation and variance individually. We use linearity of expectation and the fact that $E(\bar{V})=\mu$ for SRS without replacement to write
+
+$$
+E(N\bar{V})=N\mu=\sum_{i=1}{N}v_{i}=v_{total}
+$$
+
+We also use variance properties and the fact that $\var{\bar{V}}=\frac{\sigma^{2}}{n}\cdot\frac{N-n}{N-1}$ to write
+
+$$
+\Var(N\bar{V})=N^{2}\frac{\sigma^{2}}{n}\cdot\frac{N-n}{N-1}
+$$
+
+Therefore, the mean and variance of $N\bar{V}$ are $v_{total}$ and $\frac{N^{2}\sigma^{2}(N-n)}{n(N-1)}$
+
+\medskip
+
+\noin (b)  Find the mean and variance of the estimator
+$b_{\textrm{total}} + N\bar{D}.$
+
+\textbf{Solution:} We will define $d_{i}=v_{i}-b_{i}$ for all $i\in\{1,2,\dots,N\}$. Then, the sample in part (a) is the same sample that we have here. Our new $\mu_{d}$ and $\sigma_{d}$ as as follows
+
+$$
+\mu_{d}=\frac{1}{N}\sum_{i=1}^{N}d_{i}\text{ and }\sigma_{d}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(d_{i}-\mu_{d})^{2}}
+$$
+
+Then, we use the same properties of expectation, variance, and SRS sampling used in part (a) to write the following
+
+$$
+E(b_{total}+N\bar{D})=b_{total}+N(\mu-\mu_{d})=v_{total}
+$$
+$$
+\Var(b_{total}+N\bar{D})=N^{2}\Var(\bar{D})=\frac{N^{2}\sigma_{d}^{2}(N-n)}{n(N-1)}
+$$
+
+\medskip
+
+\noin (c) Give some simple scenarios for the relationship between the $b_i$'s and $v_i$'s  where the estimator from (a) is better than that of (b), where  the estimator from (b) is better than that of (a), and where they are  equally good.
+
+\textbf{Solution:} First note that both estimators are unbiased for $v_{total}$, so we only need to compare variance to see which estimator is better. We will examine each case individually.
+
+\textbf{Equal:} We will examine the case where every gem has the same appraised and actual value (i.e. $v_{i}=b_{i}=c$ for all $i\in\{1,2,\dots,N\}$ and $c\in\mathbb{R}$). Then, we know that every sample in $V$ will have the same value, so its variance is zero which means $\sigma^{2}=0$. Our second estimator sample contains all zeros, which means that its variance is also zero and $\sigma_{d}^{2}=0$. Therefore, both of these estimators perform equally well in this case.
+
+\textbf{Estimator from (b) is better:} We will examine the case where every gem has the same appraised and actual value for each gem, but every gem is different from each other. In this case, the estimator from (a) will have nonzero variance as every element in the sample has a different value. However, the estimator from (b) will have variance zero as every element in the sample has value $0$. Therefore, the estimator in part (b) is better in this case.
+
+\textbf{Estimator from (a) is better:} Suppose that we have $v_{i}=c$ for all $i\in\{1,2,\dots,N\}$ and we randomly choose each $b_{i}$ so that no two values of $b_{i}$ are the same. In this case, the variance from (a) is zero as each $v_{i}$ is the same. However, each element in the sample in part (b) will have a different value, which means nonzero variance. Therefore, the estimator from part (a) does better in this case.
+
+\medskip
+
+\noin (d) Suppose now that, instead of a simple random sample, we decide that sampling gems with high  appraised values is more important than sampling gems with low appraised values. Instead of a simple random sample, for each $i$ we include gem $i$ in our sample with probability ${b_i}/{b_{\textrm{total}}}$, independent of the other gems. As before, we observe the true value of each gem in our sample. Based on these data, construct an unbiased estimator for $v_{\textrm{total}}$.
+
+\textbf{Solution:} We will use the Horvitz-Thompson estimator to create an unbiased estimator for $v_{total}$. Letting $v_{total}=\tau$, $y_{i}=v_{i}$, and $\pi_{i}=\frac{b_{i}}{b_{total}}$. Then, we have
+
+$$
+\hat{v}_{total}=\sum_{v_{i}\in S}\frac{v_{i}b_{total}}{b_{i}}
+$$
+
+We can create an indicator $I(v_{i}\in S)$ equal to $1$ when $v_{i}$ is in the sample to rewrite this as
+
+$$
+\hat{v}_{total}=\sum_{i=1}^{N}\frac{v_{i}b_{total}I(v_{i}\in S)}{b_{i}}
+$$
+
+\bigskip
+
+\noin 3. The dataset \texttt{penguins.csv} has size measurements for $N = 342$ penguins that were observed on three islands in the Palmer Archipelago in Antarctica. See
+ \url{https://allisonhorst.github.io/palmerpenguins/articles/intro.html} for documentation and crediting for the dataset. The original data had 344 penguins, but we removed 2 that were missing some measurements.
+
+ \medskip
+
+ \noin The 342 penguins are of course a sample from the population of all penguins in Antarctica, but for this problem we will take the 342 penguins to be our finite population of interest, and consider samples from this finite population. This is helpful for studying the performance of various methods, since we are trying out methods on real data but we also know the measurements for the 342 penguins so, e.g., we can calculate the population mean of a variable of interest for this finite population.
+
+ \medskip
+
+\noin The penguins are of three different species: Adelie, Gentoo, and Chinstrap. Let $\mu$ be the population mean for flipper length in millimeters, and $\mu_A, \mu_G, \mu_C$ be the Adelie, Gentoo, and Chinstrap mean flipper lengths, respectively. For the sampling schemes investigated below, let the total sample size be $n = 60$.
+
+\medskip
+
+\noin (a) Suppose for this part that a simple random sample \emph{with} replacement is obtained, with sample size $n = 60$. Find the probability that there is at least one penguin that gets sampled more than once. Do this in two ways: mathematically and via simulation.
+
+\textbf{Solution:} We will first calculate the probability mathematically. We will do so by complementary counting. This means that we need to find the probability $p_{0}$ that no penguin gets sampled more than once (every penguin in the sample is unique). This is calculated as follows
+
+$$
+p_{0}=\prod_{i=0}^{n-1}\frac{342-i}{342}
+$$
+
+Plugging in our value of $n=60$ and solving gives $p_{0}\approx0.00406733956$. Our desired probability is then $1-p_{0}\approx0.995933$. The code for the simulation is shown below.
+
+```{r}
+set.seed(111)
+trials = 10^5
+repeats <- replicate(trials, max(tabulate(sample(1:342,60,replace=TRUE))))
+sum(repeats>1)/trials
+```
+
+The probablity via simulation is $0.99542$ which is very close to our mathematically calculated value.
+
+\medskip
+
+\noin (b) Again suppose that a simple random sample \emph{with} replacement is obtained, with $n = 60$. An ornithologist decides to estimate $\mu_A$ by the sample mean of the Adelie penguins in the sample, and likewise for $\mu_G$ and $\mu_C$. What difficulty arises in trying to find the bias, standard error, and RMSE (the square root of the MSE) for these estimators of $\mu_A, \mu_G, \mu_C$?
+
+\textbf{Solution:} The main difficulty arises when a species of penguin is not represented in the sample at all. Then, its sample mean is undefined as the calculation involves division by zero. Because it is entirely possible to pick a sample with no penguins of a certain species, it is possible to have undefined bias, standard error, and RMSE.
+
+\medskip
+
+\noin (c) Calculate the true values of $\mu, \mu_A, \mu_G, \mu_C$ and the population sizes $N_A, N_G, N_C$ of  Adelie, Gentoo, and Chinstrap penguins, respectively. In creating estimators, you can assume that $N_A, N_G, N_C$ are known but, of course, you should treat $\mu, \mu_A, \mu_G, \mu_C$ as unknown.
+
+\textbf{Solution:} The R code is shown below.
+
+```{r}
+penguin <- read.csv("penguins.csv")
+
+mu <- mean(penguin$flipper_length_mm)
+mua <- mean(penguin$flipper_length_mm[penguin$species == "Adelie"])
+mug <- mean(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+muc <- mean(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+print(c(mu,mua,mug,muc))
+
+N <- length(penguin$flipper_length_mm)
+Na <- length(penguin$flipper_length_mm[penguin$species == "Adelie"])
+Ng <- length(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+Nc <- length(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+print(c(N,Na,Ng,Nc))
+```
+
+Therefore, the true values of $\mu, \mu_A, \mu_G, \mu_C$ are $200.9152,189.9536,2171870,$ and $195.8235$ respectively. The population sizes $N_A, N_G, N_C$ are $151,123,$ and $68$ respectively.
+\medskip
+
+\noin (d) For the rest of this problem, suppose that stratified sampling is performed. Each species is a stratum, and within each stratum a simple random sample \emph{without} replacement is collected. The ornithologist is especially interested in learning about Gentoo and Chinstrap penguins, in addition to learning about the overall $\mu$, and so decides on sample sizes of $10, 25, 25$ for the Adelie, Gentoo, Chinstrap strata, respectively.
+
+\medskip
+
+\noin Let $\bar{Y}_{\textrm{naive}}$ be the sample mean of all the individual flipper lengths observed in the sample and let $\hat{\mu}_{\textrm{strat}}$ be the standard stratified sampling estimator for $\mu$. Find the bias, standard error, and RMSE of  $\bar{Y}_{\textrm{naive}}$ and of $\hat{\mu}_{\textrm{strat}}$ mathematically (give specific numbers).
+
+\textbf{Solution:} For notation, we will let $n_{A}$, $n_{G}$ and $n_{C}$ be the number in the strata of Adelie, Gentoo, and Chinstrap penguins. We will define to total number to be $n=n_{A}+n_{G}+n_{C}$.
+
+We will first examine $\hat{Y}_{naive}=\frac{n_{A}\mu_{A}+n_{G}\mu_{G}+n_{C}\mu_{C}}{n}$. As $\hat{Y}_{naive}$ is the sample mean of all the individual flipper lengths in the sample, we have
+
+$$
+E(\bar{Y}_{naive})=\frac{n_{A}\mu_{A}+n_{G}\mu_{G}+n_{C}\mu_{C}}{n}
+$$
+
+We then have the following expression for bias, where we can plug in all of our numerical numbers to get a numerical bias.
+
+$$
+\Bias(\hat{Y}_{naive})=\frac{n_{A}\mu_{A}+n_{G}\mu_{G}+n_{C}\mu_{C}}{n}-\mu
+$$
+
+We will now calculate variance. Independence of Strata allows us to write
+
+$$
+\Var(\hat{Y}_{naive})=\sum_{i\in\{A,G,C\}}\frac{n_{i}^{2}\Var(\bar{Y}_{i})}{n^{2}}=\sum_{i\in\{A,G,C\}}\frac{n_{i}^{2}\sigma_{i}^{2}(N_{i}-n_{i})}{(N_{i}-1)n^{2}}
+$$
+
+By definition of standard error and RMSE, we have
+
+$$
+SE(\bar{Y}_{naive})=\sqrt{\Var(\bar{Y}_{naive})} \text{ and } RMSE(\bar{Y}_{naive})=\sqrt{\Bias^{2}(\bar{Y}_{naive})+\Var(\bar{Y}_{naive})}
+$$
+
+The code to calculate these values is shown below.
+
+```{r}
+penguin <- read.csv("penguins.csv")
+
+mu <- mean(penguin$flipper_length_mm)
+mua <- mean(penguin$flipper_length_mm[penguin$species == "Adelie"])
+mug <- mean(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+muc <- mean(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+N <- length(penguin$flipper_length_mm)
+Na <- length(penguin$flipper_length_mm[penguin$species == "Adelie"])
+Ng <- length(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+Nc <- length(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+na <- 10
+ng <- 25
+nc <- 25
+n <- na+ng+nc
+
+vara <- var(penguin$flipper_length_mm[penguin$species == "Adelie"]) * (Na-1)/Na
+varg <- var(penguin$flipper_length_mm[penguin$species == "Gentoo"]) * (Ng-1)/Ng
+varc <- var(penguin$flipper_length_mm[penguin$species == "Chinstrap"]) * (Nc-1)/Nc
+
+bias <- (na * mua + ng*mug + nc*muc) / n - mu
+var <-((na * vara * (Na-na)/(Na-1))+
+      (ng * varg * (Ng-ng)/(Ng-1))+
+      (nc * varc * (Nc-nc)/(Nc-1)) )/n^2
+se <- sqrt(var)
+rmse <- sqrt(bias^2 + var)
+
+print(c(bias,var,se,rmse))
+```
+
+Therefore, the bias, variance, standard error, and RMSE of $\bar{Y}_{naive}$ are 2.8314529, 0.5669728, 0.7529759, and 2.9298632 respectively.
+
+We now calculate the values for $\hat{\mu}_{strat}$. By definition of SRS samplign without replacement, we have $\Bias(\hat{\mu}_{strat})=0$. The defintion also gives us
+
+$$
+\Var(\hat{\mu}_{strat})=\sum_{i\in\{A,G,C\}}\frac{N_{i}^{2}\sigma_{i}^{2}(N_{i}-n_{i})}{N^{2}n_{i}(N_{i}-1)}
+$$
+
+As $\hat{\mu}_{strat}$ is unbiased, we have SE is equal to RMSE.
+
+$$
+SE(\hat{\mu}_{strat})=\sqrt{\Var(\hat{\mu}_{strat})}=RMSE(\hat{\mu}_{strat})
+$$
+
+The code to calculate this is shown below.
+
+```{r}
+penguin <- read.csv("penguins.csv")
+
+mu <- mean(penguin$flipper_length_mm)
+mua <- mean(penguin$flipper_length_mm[penguin$species == "Adelie"])
+mug <- mean(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+muc <- mean(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+N <- length(penguin$flipper_length_mm)
+Na <- length(penguin$flipper_length_mm[penguin$species == "Adelie"])
+Ng <- length(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+Nc <- length(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+na <- 10
+ng <- 25
+nc <- 25
+n <- na+ng+nc
+
+vara <- var(penguin$flipper_length_mm[penguin$species == "Adelie"]) * (Na-1)/Na
+varg <- var(penguin$flipper_length_mm[penguin$species == "Gentoo"]) * (Ng-1)/Ng
+varc <- var(penguin$flipper_length_mm[penguin$species == "Chinstrap"]) * (Nc-1)/Nc
+
+bias <- 0
+var <-(Na^2 * vara * (Na-na)/((Na-1)*na) +
+      Ng^2 * varg * (Ng-ng)/((Ng-1)*ng)+
+      Nc^2 * varc * (Nc-nc)/((Nc-1)*nc) )/N^2
+se <- sqrt(var)
+rmse <- sqrt(bias^2 + var)
+
+print(c(bias,var,se,rmse))
+```
+
+Therefore, the bias, variance, standard error, and RMSE of $\hat{\mu}_{strat}$ are 0, 1.002669, 1.001333, and 1.001333 respectively.
+
+\medskip
+
+\noin (e) Find the bias, standard error, and RMSE of  $\bar{Y}_{\textrm{naive}}$ and of $\hat{\mu}_{\textrm{strat}}$ via simulation.
+
+\textbf{Solution:} The code is shown below.
+
+```{r}
+set.seed(111)
+trials <- 10^5
+naive <- rep(0,trials)
+strat <- rep(0,trials)
+penguin <- read.csv("penguins.csv")
+
+N <- length(penguin$flipper_length_mm)
+Na <- length(penguin$flipper_length_mm[penguin$species == "Adelie"])
+Ng <- length(penguin$flipper_length_mm[penguin$species == "Gentoo"])
+Nc <- length(penguin$flipper_length_mm[penguin$species == "Chinstrap"])
+
+na <- 10
+ng <- 25
+nc <- 25
+n <- na+ng+nc
+
+for (i in 1:trials){
+  asample <- sample(penguin$flipper_length_mm[penguin$species == "Adelie"],na,replace = FALSE)
+  gsample <- sample(penguin$flipper_length_mm[penguin$species == "Gentoo"],ng,replace = FALSE)
+  csample <- sample(penguin$flipper_length_mm[penguin$species == "Chinstrap"],nc,replace = FALSE)
+  
+  naive[i] <- mean(c(asample,gsample,csample))
+  
+  strat[i] <- (Na/N)*mean(asample) + (Ng/N) * mean(gsample) + (Nc/N) * mean (csample)
+}
+
+#naive numbers
+print(c(mean(naive)-mu,sqrt(var(naive)), sqrt((mean(naive)-mu)^2+var(naive))))
+
+#strata numbers
+print(c(mean(strat)-mu,sqrt(var(strat)), sqrt((mean(strat)-mu)^2+var(strat))))
+```
+
+Therefore, the bias, standard error and RMSE of $\bar{Y}_{naive}$ and $\hat{\mu}_{strat}$ are $(2.8343245,0.7516477,2.9322977)$ and $(0.004405813,1.000006097,1.000015803)$ respectively.
+
+\medskip
+
+\noin (f) Find the Horvitz-Thompson estimator of $\mu$. Is it the same estimator as  $\hat{\mu}_{\textrm{strat}}$? If so, show that. If not, find the bias, standard error, and RMSE of the Horvitz--Thompson estimator.
+
+\textbf{Solution:} We will calculate the Horvitz-Thompson estimator of the total length of the Adelie penguins, and then use symmetry to find the remaining two estimators. Then, we will sum all three and divide by $N$ to get the Horvitz-Thompson estimator of $\mu$.
+
+We will denote the flipper length of the $i$th penguin selected from the Adelie strata as $y_{ia}$. Then, we have $\tau_{a}=\sum_{i\in S}\frac{y_{ia}}{\pi_{i}}$. We know that $\pi_{i}=\frac{n_{a}}{N}$ as we can think of choosing our entire sample simultaneously. therefore, we have $\tau_{a}=\sum_{i\in S}\frac{y_{ia}}{\pi_{i}}=\frac{N_{a}}{n_{a}}\sum_{i\in S}y_{ia}=N_{a}\bar{Y_{a}}$.
+
+Symmetry lets us conclude that $\tau_{g}=N_{g}\bar{Y}_{g}$ and $\tau_{c}=N_{c}\bar{Y}_{c}$. Therefore, our final estimator for the mean is 
+
+$$
+\hat{\tau}_{\mu}=\frac{N_{a}\bar{Y}_{a}+N_{g}\bar{Y}_{g}+N_{c}\bar{Y}_{c}}{N}
+$$
+
+This is the same estimator as $\hat{\mu}_{strat}$ by definition.

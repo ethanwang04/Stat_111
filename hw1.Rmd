@@ -1,0 +1,410 @@
+---
+title: "Stat 111 Homework 1, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 2/3 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\noin Please show your work, simplify fully, and give clear, careful justifications for your answers (using *words and sentences* to explain your logic, in addition to the relevant mathematical expressions and/or code). When code is used, both the *outputs* (such as plots and summary statistics) and the *code* must be included in your submission.
+
+\bigskip
+
+\noin 1. Joe is interested in how well (or poorly) ChatGPT can solve probability problems. He does not want to pay \$42 a month for the pro version, but the free version is heavily throttled so he does not know how many probability problems he will be able to ask ChatGPT.
+
+\medskip
+
+\noin He will ask ChatGPT $N \sim \Pois(\lambda)$ probability problems, where $\lambda$ is known.  Let $Y_j$ be the indicator of problem $j$ being answered correctly, and $$Y = Y_1+Y_2+\dots+Y_N$$ be the total number of questions answered correctly. Model the $Y_j$'s as i.i.d. $\Bern(p)$, where $p$ is the estimand. The data will be $(n, y_1,y_2,\dots,y_n)$, where $n$ is the observed value of $N$ and $y_j$ is the observed value of $Y_j$. 
+
+\medskip
+
+\noin (a) Find the distribution of $Y$.
+
+Solution: We know that we have $N\sim\Pois(\lambda)$ trials (all independent) and each trial has a $p$ probability of resulting in $1$. This is the same story as Chicken-egg, which allows us to write $Y\sim\Pois(p\lambda)$.
+
+\medskip
+
+\noin (b) For the case where $\lambda = 20$ and $p = 1/4$, check your result from (a) via a simulation with at least $10^4$ replications. Specifically, plot the theoretical PMF of $Y$ and a histogram of simulated values of $Y$, and compare. (You can have your two plots side-by-side or overlaid on the same graph. If the former, make sure the axes are the same for both plots to make it easier to compare. If the latter, use two contrasting colors to make it easier to distinguish the theoretical part from the simulation part.) 
+
+Solution: We will graph both the probability of achieving a certain value of $Y$ in histogram form alongside the theoretical PMF for a random variable $Y\sim\Pois(p\lambda)$ for the given values of $p$ and $\lambda$. The code for the graphs and the graphs are shown below.
+
+```{r}
+#define givens in the problem and set seed to 111
+set.seed(111)
+lambda <- 20
+trials <- 10^4
+p <- 0.25
+#simulate the value of n 
+n <- rpois(trials,lambda)
+simulated_binomial <- rbinom(trials, n, p)
+
+#Histogram plotting
+hist(simulated_binomial, xlab = "Value of Y", ylab = "Probability", main = "Simulated values of Y"
+     , freq = F)
+
+#PMF value plotting
+xaxis <- 0:15
+theoreticalPMF <- dpois(xaxis, lambda * p)
+plot(xaxis, theoreticalPMF, xlab = "Value of Y", ylab = "Probability", main = "theoretical PMF")
+```
+
+The graphs seem to roughly match up, so our solution to $1(a)$ does make sense.
+
+\medskip
+
+\noin (c) Suppose for this part that it is observed that $N = 18$ and $Y = 4$. Find the likelihood function $L(p ; n, y_1, y_2, \dots, y_n)$. Also, plot the likelihood function.
+
+Solution: The likelihood function is $L(p; n,y_{1},y_{2},\dots,y_{n})=p^{4}(1-p)^{18}$. This is because the only way for $N=18$ and $Y=4$ is to have $4$ of each $y_{i}$ to be one and the remaining $14$ of the $y_{i}$ to be zero. Note that we drop the binomial coefficient at the front as it does not depend on $p$. A plot is shown below.
+
+```{r}
+  #Define Likelihood function
+  L <- function(x){x^4 * (1-x)^14}
+  #plot likelihood function
+  curve(L, from=0, to=1, xlab="Value of p",
+        ylab="Value of likelihood function", main="Likelihood Function")
+
+```
+
+\medskip
+
+\noin (d) Explain why it was possible to solve the previous part even though a specific numerical value of $\lambda$ was not given and the observed values of $Y_1,\dots,Y_{18}$ were also not given.
+
+Solution: We do not need the value of $\lambda$ as it only impacts the value of $N$. This is not needed in the previous part as we were given $N=18$, so the value of $\lambda$ will not impact our final value. We also do not are about which individual $Y_{i}$ was equal to one, as they are i.i.d. Therefore, we do not need the value of $\lambda$ or which of the $Y_{i}$ variables crystalize to $1$ as we are given all the information we need with $N=18$ and $Y=4$.
+
+\medskip
+
+\noin (e) Now suppose that we take a Bayesian approach, modeling our uncertainty about $p$ by giving it a distribution. Let the prior be $p \sim \Unif(0,1)$. We now have $Y | (N,p) \sim \Bin(N,p)$. Find the conditional distribution of $Y | (N = n)$.
+
+Solution: The conditional distribution $Y|(N=n)$ is equivalent to $P(Y=k|N=n)$. Hybrid LOTP gives us
+
+$$
+P(Y=k|N=n)=\int_{0}^{1}P(Y=k|N=n,P=p)f_{p}(p)dp
+$$
+As we know that $p\sim\Unif(0,1)$, we have $f_{p}(p)=1$. We also know that because $Y|(N,p)\sim\Bin(N,p)$, we have $P(Y=k|N=n,P=p)=\binom{n}{k}p^{k}p^{n-k}$. Plugging these values into our integral gives
+
+$$
+P(Y=k|N=n)=\int_{0}^{1}\binom{n}{k}p^{k}p^{n-k}dp
+$$
+
+Using the story of Bayes' Billiards, we conclude that this integral computes to $\frac{1}{n+1}$. Therefore, we have $P(Y=k|N=n)=\frac{1}{n+1}$.
+
+\medskip
+
+\noin (f) For the case $n = 18$, check your result from (e) via simulation, with at least $10^4$ replications.
+
+Solution: The code for simulating the result in part (e) and a histogram of the simulation results are shown below
+
+```{r}
+#Set the seed and generate p
+set.seed(111)
+trials <- 10^5
+p <- runif(trials)
+
+#run the trials
+n <- 18
+simulation <- rbinom(trials, n, p)
+hist(simulation, xlab = "Y value", ylab= "Probability", main= "Simulated values of Y", freq = F, breaks = seq(-1,18,1))
+```
+
+As you can see, each value of $Y$ has a probability of roughly $\frac{1}{19}$ as calculated in part $(e)$. Therefore, we conclude that our result from part $(e)$ is correct.
+
+\medskip[]
+
+\noin (g) Continuing as in (e), suppose again that it is observed that $N = 18$ and $Y = 4$. Find the posterior distribution of $p$ given the data. 
+
+Solution: Based on Beta-Binomial conjugacy and the fact that $p\sim\Beta(1,1)$ alongside $N-18$ and $Y=4$ being given, we know that the posterior distribution of $p$ given the data is $\Beta(5,15)$.
+
+\newpage
+
+\noin 2. Person $0$ has a new virus, and will infect a Poisson number of people. The \emph{first wave} is the people infected by Person $0$. Each person in the first wave will then infect a Poisson number of people. The \emph{second wave} is the people infected by someone from the first wave. Each person in the second wave then infects a Poisson number of people, etc. Suppose that no one gets infected more than once, and that the Poisson r.v.s are i.i.d. with an unknown parameter $\theta$. 
+
+
+\medskip
+
+\noin We observe $Y_1,Y_2,\dots,Y_n$, where $Y_j$ is the number of people in the $j$th wave. Let $y_j$ be the observed value of $Y_j$.
+
+\medskip
+
+\noin (a) Find the likelihood function $L(\theta)$.
+
+\smallskip
+
+\noin Hint: First find $P(Y_{j+1} = y_{j+1} | Y_1 = y_1, \dots, Y_j = y_j)$.
+
+Solution: We first notice that $P(Y_{j+1}=y_{j+1}|Y_1 = y_1, \dots, Y_j = y_j)=P(Y_{j+1}=y_{j+1}|Y_{j}=y_{j})$ as the number of people infected in a wave depends only on the number of people infected in the previous wave (Same as Markov property). Therefore, we know that $Y_{j+1}|Y_{j}=y_{j}$ is the sum of $j$ independent $\Pois{\lambda}$ variables. In other words, we have $Y_{j+1}|Y_{j}=y_{j}\sim\Pois(y_{j}\lambda)$. The only exception to this is for $Y_{1}$, but we are given that $Y_{1}\sim\Pois{\theta}$ in the problem. Because each $Y_{j}$ is i.i.d., we multiply each PMF together to get the likelihood function. The calculation and simplification by dropping constants is shown below.
+
+$$
+L(\theta)=P(Y_{1}=y_{1})\prod_{n=1}^{j-1}P(Y_{n+1}=y_{n+1}|Y_{n}=y_{n})=\frac{\theta^{y_{1}}e^{-\theta}}{y_{1}!}\prod_{n=1}^{j-1}\frac{(y_{j}\theta)^{y_{n+1}}e^{-y_{j}\theta}}{y_{n+1}!}
+$$
+$$
+L(\theta)=\theta^{y_{1}+y_{2}+\cdots+y_{j}}e^{-\theta(1+y_{1}+y_{2}+\cdots+y_{j-1})}
+$$
+
+Therefore, we have our likelihood function $L(\theta)$ defined as $L(\theta)=\theta^{y_{1}+y_{2}+\cdots+y_{j}}e^{-\theta(1+y_{1}+y_{2}+\cdots+y_{j-1})}$
+
+\medskip
+
+\noin (b) Find a two-dimensional statistic $(S,T)$ that suffices for determining the likelihood function. That is, if we find out the values of $S$ and $T$ then we know the likelihood function from (a), without needing to know $y_1,\dots,y_n$. 
+
+Solution: Based on our likelihood function in part $(a)$, we only need to know the exponents of $\theta$ and $e$ in order to have a fully defined function. Therefore, if we set $S=y_{1}+y_{2}+\cdots+y_{j}$ and $T=1+y_{1}+y_{2}+\cdots+y_{j-1}$, then we will have the entire likelihood function without needing to know the individual values for each $y_{j}$.
+
+\bigskip
+
+\noin 3. Old Faithful is a famous geyser in Yellowstone National Park in Wyoming. (It was named that in 1870, due to its regular eruptions.) In \texttt{R} there is a built-in dataset about Old Faithful, called \texttt{faithful}. In RStudio you can type \texttt{View(faithful)} to view the data. If you're not using R, you can download the data from \url{http://www-eio.upc.edu/~pau/cms/rdata/csv/datasets/faithful.csv}.
+
+\medskip
+
+\noin Each observation corresponds to an eruption that was studied. The $j$th observation is a pair $(y_j, w_j)$, where $y_j$ is the duration of the eruption (in minutes) and $w_j$ is the waiting time until the next eruption (in minutes). The dataset contains $\mathbf{y}$ as the variable \texttt{eruptions} and $\mathbf{w}$ as the variable \texttt{waiting}. 
+
+\medskip
+
+\noin (a) Find the sample mean, sample median, and sample standard deviation of \texttt{eruptions}. 
+
+The code and results for the sample mean, sample median, and sample standard deviation are shown below.
+
+```{r}
+sample_mean <- mean(faithful$eruptions)
+sample_median <- median(faithful$eruptions)
+sample_sd <- sd(faithful$eruptions)
+
+print(paste("Sample Mean: ", sample_mean))
+print(paste("Sample Median: ", sample_median))
+print(paste("Sample Standard Deviation: ", sample_sd))
+```
+
+\medskip
+
+\noin (b) Plot a histogram of \texttt{eruptions}. 
+
+Solution: The code and graph for the histogram of eruptions is shown below.
+
+```{r}
+hist(faithful$eruptions, xlab="Number of eruptions", 
+     ylab="Frequency", main="Histogram of Eruptions", breaks=30)
+```
+
+\medskip
+
+\noin (c) Plot kernel density estimates of \texttt{eruptions} with rectangular kernel, for 3 different choices of bandwidth: $0.01, 0.33,$ and $1$. Which of these bandwidths do you prefer, and why? 
+
+Solution: The code for obtaining and plotting each of the density estimates is shown below.
+
+```{r}
+#Bandwidth=0.01
+den1 <- density(faithful$eruptions, bw=0.01, kernel="rectangular")
+plot(den1, xlab = "Minutes of Eruption", main="KDE for Bandwidth=0.01")
+#Bandwidth=0.33
+den2 <- density(faithful$eruptions, bw=0.33, kernel="rectangular")
+plot(den2, xlab = "Minutes of Eruption", main="KDE for Bandwidth=0.33")
+#Bandwidth=1
+den3 <- density(faithful$eruptions, bw=1, kernel="rectangular")
+plot(den3, xlab = "Minutes of Eruption", main="KDE for Bandwidth=1")
+```
+
+We prefer a bandwidth of 0.33. This is because it provides enough smoothing to get the general shape of the data (unlike the noise provided with a bandwidth of 0.01) while avoiding overfitting to a rectangular density function (unlike a bandwidth of 1).
+
+\smallskip
+
+\noin Hint: Type \texttt{help(density)}, but not \texttt{help(destiny)}, for information about \texttt{R}'s build-in tool for KDE.
+
+\medskip
+
+\noin (d) Briefly describe in words what the distribution of  \texttt{eruptions} looks like. Explain why only reporting the sample mean and sample standard deviation wouldn't give a good description. 
+
+Solution: The distribution appears to be bimodal. Giving only a sample mean and standard deviation here will not capture the shape of the distribution. This is because giving a sample mean and standard deviation would imply that the data is clustered around the mean value, but in reality there are two different cluster points for the data.
+
+\medskip
+
+\noin (e) It has been claimed that short eruptions tend to be followed by short waiting times and long eruptions tend to be followed by long waiting times.  Assess the claim in two different ways: by looking at the sample correlation, and by giving a reasonable definition of "short" and "long" (based on what the distributions look like, not necessarily using the mean or median) and then checking whether or not, for a random observation, $$P(\textrm{short waiting time } | \textrm{ short eruption } ) > P(\textrm{short waiting time}).$$ 
+
+Solution: We will calculate the sample correlation between the eruption time and waiting time.
+
+```{r}
+print(cor(faithful$eruptions, faithful$waiting))
+```
+This correlation is close to 1 which lets us infer a strong positive correlation. This means that short eruption times are closely linked with short waiting times and long eruptions are closely linked with long waiting times.
+
+We will now plot both the eruption times and the waiting times. The code and plots are shown below
+
+```{r}
+hist(faithful$eruptions, xlab="Time of Eruption", main="Eruption Times", breaks=30)
+hist(faithful$waiting, xlab="Time of Waiting", main="Waiting Times", breaks=30)
+```
+
+Based on the histograms we will define a short eruption as under 2.5 minutes and a long eruption as over 2.5 minutes. We will also define a short waiting time as under 60 minutes and a long eruption as over 60 minutes. Based on these definitions, we will calculate $P(\textrm{short waiting time } | \textrm{ short eruption } )$ and $P(\textrm{short waiting time})$. The code for this is shown below.
+
+```{r}
+#import library and make a new copy of the data
+library(dplyr)
+
+#Specifically choose only the data points that qualify as a short eruption
+faithful_short <- faithful %>% filter(eruptions < 2.5)
+
+#calculate the conditional probabilty
+conditional <- length(which(faithful_short$waiting < 60)) / length(faithful_short$eruptions)
+
+#calculate the marginal probability
+marginal <- length(which(faithful$waiting < 60))/length(faithful$eruptions)
+
+print(paste("Conditional Probability: ", conditional))
+print(paste("Marginal Probability: ", marginal))
+```
+
+As we have $0.80434>0.28309$, we conclude that $P(\textrm{short waiting time } | \textrm{ short eruption } ) > P(\textrm{short waiting time})$ which supports the claim that short eruption times are followed by short waiting times and long eruption times are followed by long waiting times.
+
+\bigskip
+
+\noin 4. Let $Z \sim \N(0,1)$ and let $Q$ be the quantile function of $Z$.
+
+\medskip
+
+\noin (a) Calculate $Q(p)$ numerically for $p = 0.84, 0.975, 0.9985$. Explain how your results relate to the 68-95-99.7\% rule.
+
+Solution: The code and results of $Q(p)$ for $p=0.84,0.975, 0.9985$ are shown below
+
+```{r}
+#set seed and calculate everything
+set.seed(111)
+one <- qnorm(0.84,0,1)
+two <- qnorm(0.975,0,1)
+three <- qnorm (0.9985,0,1)
+
+print(paste("Q(0.84)=",one))
+print(paste("Q(0.975)=",two))
+print(paste("Q(0.9985)=",three))
+```
+For a standard normal distribution, the quantile function $Q(p)$ determines how many standard deviations above the mean are required to have at least $p$ of the data below that point. Using the $68-95-99.7$ rule for normal distributions, we estimate $Q(0.85)\approx 1$, $Q(0.975)\approx 2$, and $Q(0.9985)\approx 3$ which lines up with our calculations.
+
+\medskip
+
+\noin (b) Show mathematically that $Q(1-p) = - Q(p)$ for all $p \in (0,1)$. 
+
+Solution. We know that the standard normal CDF is symmetric. In other words, we have $1-\Phi(k)=1-p$ which implies that $Q(1-p)=k$. We also have $P(X\geq-k)=1-p$ which implies that $P(X\leq-k)=p$. This is the same as saying $Q(p)=-k$, or $k=-Q(p)$. As we have $Q(1-p)=k$ and $k=-Q(p)$, we have $Q(1-p)=-Q(p)$ as desired.
+
+\medskip
+
+\noin (c) Calculate ${\mathrm E}[Z^k]$ exactly for $k=2,4,6,8$.
+
+\smallskip
+
+\noin Hint: Review Section 6.5 of the Stat 110 book. 
+
+Solution: Example 6.5.2 in the stat 110 textbook gives us $E(Z^{2n})=\frac{(2n)!)}{2^{n}n!}$. Using this formula allows us to obtain the following values
+
+$E(Z^{2})=1$
+
+$E(Z^{4})=\frac{24}{8}=3$
+
+$E(Z^{6})=\frac{6!}{8\cdot 3!}= 15$
+
+$E(Z^{8})=\frac{8!}{16\cdot 4!}=105$
+
+\medskip
+
+\noin (d) Suppose that we observe i.i.d. r.v.s $Y_1,Y_2,\dots,Y_n$, where the truth is that $Y_j \sim \N(0,1)$ but we do not \emph{know} anything about the distribution of $Y_j$. We want to estimate $$\mu_k = {\mathrm E} [ Y_1^k ],$$ for $k=2,4,6,8$. Let $n = 100$. 
+
+\medskip
+
+\noin Suppose that we decide to use the sample moment $$M_k = \frac{1}{n} \sum_{j=1}^n Y_j^k$$  to estimate $\mu_k$. Find the bias and standard error of $M_k$ for $k = 2, 4, 6, 8$.
+
+Solution: We will first examine the bias. By linearity and symmetry, we have $E(M_{k})=\frac{1}{n}E(Y_{1}^{k}+Y_{2}^{k}+\cdots+Y_{j}^{k})=E(Y_{1}^{k})=\mu_{k}$. Therefore, we conclude that the bias for every $k$ is $E(M_{k})-\mu_{k}=0$.
+
+Now, we will examine the standard error. We know that $SE=\sqrt{\var(\frac{1}{n}\sum_{j=1}^{n}Y_{j}^{k})}=\sqrt{\frac{1}{n^{2}}(\sum_{j=1}^{n}\var(Y_{j}^{n}))}$ by independence. By symmetry, we know that $\var(Y_{j}^{k})=\var(Y_{1}^{k})$ for all $j$, so this turns into $SE=\sqrt{\frac{\var(Y_{1}^{k})}{n}}$.
+
+We know that $\var{Y_{1}^{k}}=E(Y_{1}^{2k})-(E(Y_{1}^{k}))^{2}$. We have already calculated the values of $E(Y_{1}^{k})$ for $k\in\{2,4,6,8\}$ in part $(c)$. We use the same method to calculate the following values of $E(Y_{1}^{2k})$.
+
+$E(Y_{1}^{12})=10395$
+
+$E(Y_{1}^{16})=2027025$
+
+Plugging in these values into our variance equations gives
+
+$\var(Y_{1}^{2})=3-1=2$
+
+$\var(Y_{1}^{4})=105-9=96$
+
+$\var(Y_{1}^{6})=10395-225=10170$
+
+$\var(Y_{1}^{8})=2026025-105^{2}=2016000$
+
+Then, we have the following $SE_{k}$ for each $k\in\{2,4,6,8\}$
+
+$SE_{2}=\sqrt{\frac{2}{n}}=\sqrt{0.02}\approx0.1414$
+
+$SE_{4}=\sqrt{\frac{96}{n}}=\sqrt{0.96}\approx0.9798$
+
+$SE_{6}=\sqrt{\frac{10170}{n}}=\sqrt{101.7}\approx10.0846$
+
+$SE_{8}=\sqrt{\frac{2016000}{n}}=\sqrt{20160}\approx141.9859$
+
+\medskip
+
+\noin (e) Continuing (d), suppose that we also want to estimate the $p$-quantile of the distribution of $Y_1$ for $p = 0.84, 0.975, 0.9985$, using the sample $p$-quantile. Simulate $n$ draws from the $\N(0,1)$ distribution. For your simulated dataset, calculate the desired sample $p$-quantiles and the estimates from (d), and compare with the results from (a) and (c) (giving the percentage errors, e.g., statements like ``the estimated value is 8\% larger than the true value"). 
+
+\smallskip
+
+\noin Hint: You may find the \texttt{quantile} function in \texttt{R} useful.
+
+Solution:The code for generating $100$ draws and estimates is shown below
+
+```{r}
+#set seed and number of trials
+set.seed(111)
+n <- 100
+#generate data
+simulated_y = rnorm(n,0,1)
+
+#p-quantiles
+one <- quantile(simulated_y, probs=0.84)
+two <- quantile(simulated_y, probs=0.975)
+three <- quantile(simulated_y, probs=0.9985)
+
+print(paste("Quantile(0.84)=",one, ". Percentage Error=", 
+            -(qnorm(0.84,0,1)-one)/qnorm(0.84,0,1) * 100))
+print(paste("Quantile(0.975)=",two,". Percentage Error=", 
+            -(qnorm(0.975,0,1)-two)/qnorm(0.975,0,1) * 100))
+print(paste("Quantile(0.9985)=",three,". Percentage Error=", 
+            -(qnorm(0.9985,0,1)-three)/qnorm(0.9985,0,1) * 100))
+
+#estimates for mean
+print(paste("M_2: ",mean(simulated_y^{2}), ". Percentage Error=",
+            (mean(simulated_y^{2})-1)/1*100))
+print(paste("M_4: ",mean(simulated_y^{4}), ". Percentage Error=", 
+            (mean(simulated_y^{4})-3)/3*100))
+print(paste("M_6: ",mean(simulated_y^{6}), ". Percentage Error=", 
+            (mean(simulated_y^{6})-15)/15*100))
+print(paste("M_8: ",mean(simulated_y^{8}), ". Percentage Error=", 
+            (mean(simulated_y^{8})-105)/105*100))

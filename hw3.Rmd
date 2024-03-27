@@ -1,0 +1,552 @@
+---
+title: "Stat 111 Homework 3, Spring 2023"
+output: pdf_document
+header-includes:
+- \newcommand{\benum}{\begin{enumerate}}
+- \newcommand{\eenum}{\end{enumerate}}
+- \newcommand{\noin}{\noindent }                    
+- \newcommand{\Bern}{\textnormal{Bern}}
+- \newcommand{\Bin}{\textnormal{Bin}}
+- \newcommand{\Pois}{\textnormal{Pois}}
+- \newcommand{\Geom}{\textnormal{Geom}}
+- \newcommand{\FS}{\textnormal{FS}}
+- \newcommand{\HGeom}{\textnormal{HGeom}}
+- \newcommand{\NBin}{\textnormal{NBin}}
+- \newcommand{\Beta}{\textnormal{Beta}}
+- \newcommand{\Gam}{\textnormal{Gamma}}
+- \newcommand{\N}{\mathcal{N}}
+- \newcommand{\Expo}{\textnormal{Expo}}
+- \newcommand{\Unif}{\textnormal{Unif}}        
+- \newcommand{\SD}{\textnormal{SD}}
+- \newcommand{\var}{\textnormal{Var}}  
+- \newcommand{\Var}{\textnormal{Var}}  
+- \newcommand{\cov}{\textnormal{Cov}}    
+- \newcommand{\cor}{\textnormal{Corr}}  
+- \newcommand{\logit}{\textnormal{logit}}    
+- \newcommand{\iid}{\overset{i.i.d}{\sim}}
+- \newcommand{\Bias}{\textnormal{Bias}}
+- \newcommand{\MSE}{\textnormal{MSE}}
+- \newcommand{\mubold}{\mbox{\boldmath$\mu$}}           
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+ **Due**: Friday 2/17 at 5:00 pm, submitted as a PDF via Gradescope.  Make sure to assign to each question all the pages with your work on that question (*including code*). You can assign multiple pages to the same question, or the same page to multiple questions. After submitting your homework, *check your submission* to make sure everything you want graded is present, easily legible, and correctly assigned.  No submissions on paper or by email will be accepted, and no extensions will be granted aside from the Monday extensions described in the syllabus.  
+
+\noin Please show your work, simplify fully, and give clear, careful justifications for your answers (using *words and sentences* to explain your logic, in addition to the relevant mathematical expressions and/or code). When code is used, both the *outputs* (such as plots and summary statistics) and the *code* must be included in your submission.
+
+\bigskip
+
+\noin 1.  Suppose that the times of major volcanic eruptions in the world follow a Poisson process of rate $\lambda$ eruptions per year. Let $\mu = 1/\lambda$. A volcanologist wishes to estimate $\lambda$ and $\mu$.
+
+\medskip
+
+\noin (a) The volcanologist collects data on the major volcanic eruptions in a pre-specified time interval $[0,t]$, where time $0$ is the first instant of the $20$th century and $t$ is fixed and known. Let $N$ be the number of eruptions in this time interval. Find the likelihood function for $\lambda$ based on observing $N=n$.
+
+Solution: We know that $N\sim\Pois{(\lambda t)}$ from poisson processes in the Stat 110 textbook. Therefore, the likelihood function is $L(\lambda;n)=(t\lambda)^{n}\lambda^{-\lambda t}$. As $t$ is given to be a constant, we can drop it to get our final likelihood function $L(\lambda;n)=\lambda^{n}\lambda^{-\lambda t}$.
+
+\medskip
+
+\noin (b) In the previous part we based our likelihood function on the one-dimensional statistic $N$, but in fact the data are richer: the volcanologist knows all the \emph{times} of the eruptions in $[0,t]$. For this part, consider the data as including not only $n$, but also $t_1,\dots,t_n$, where $t_j$ is the time of the $j$th eruption and $0 < t_1<t_2<\dots<t_n<t$. Find the likelihood function for $\lambda$ based on these data. Is it equivalent to the likelihood from (a)?
+
+\smallskip
+
+\noin Hint: Recall from Stat 110 that the random variables that give rise to the interarrival times $x_1 = t_1, x_2 = t_2 -t_1, x_3 = t_3 - t_2, \dots, x_n = t_n - t_{n-1}$ are i.i.d.~$\Expo(\lambda)$. Explain why it is equivalent to work in terms of $(x_1,\dots,x_n)$ rather than $(t_1,\dots,t_n)$. Then write down the likelihood function based on  $(x_1,\dots,x_n)$, with one additional factor to account for the fact that we also know there were no eruptions between $t_n$ and $t$. 
+
+Solution: Note that we can write $\sum_{i=1}^{j}x_{i}=t_{j}$ for any $j\in\{1,2,\dots n\}$. Therefore, as each $t_{j}$ can be represented using some combination of $x_{i}$s, we know that using $x_{1},x_{2},\dots,x_{n}$ is equivalent to working with $t_{1},t_{2},\dots,t_{n}$.
+
+Now that we know that using $x_{i}$ is the same to using $t_{i}$, we can use the CDF to find the likelihood function. This will end up being the product of each individual CDF for $x_{i}$. This product is $\lambda^{n}e^{-\lambda \sum_{i=1}^{n}x_{i}}$. We also need to add a term to account for the fact that there is no eruption between times. We know that $\sum_{i=1}^{n}x_{i}=t_{n}$. Therefore, the chance that there are no eruptions is $F(t>t_{n})=e^{-\lambda(t-\sum_{i=1}^{n}x_{i})}$. Therefore, our final likelihood is as follows
+
+$$
+L(\lambda:x_{1},x_{2},\dots,x_{n})=(e^{-\lambda(t-\sum_{i=1}^{n}x_{i})})(\lambda^{n}e^{-\lambda \sum_{i=1}^{n}x_{i}})=\lambda^{n}e^{-\lambda t}
+$$
+
+This is the same likelihood function as calculated in part (a).
+
+\medskip
+
+\noin (c) Find the MLE $\hat{\lambda}$ of $\lambda$ and its bias, variance, and MSE. 
+
+Solution: Our first step will be to get the log likelihood function. This is done below.
+
+$$
+\ell(\lambda)=n\ln(\lambda)-\lambda t
+$$
+
+We will now take our first and second derivatives of our log likelihood. Then, we set the first derivative and set it equal to zero and solve for $\lambda$, and then check the sign of the second derivative at this value to see if it is a maximum. These steps are shown below
+
+$$
+\frac{d\ell(\lambda)}{d\lambda}=\frac{n}{\lambda}-t=0\implies \lambda=\frac{n}{t}
+$$
+$$
+\frac{d^{2}\ell(\lambda)}{d\lambda^{2}}=-\frac{n}{\lambda^{2}}<0
+$$
+
+As the first derivative is zero at $t=\frac{n}{\lambda}$ and the second derivative at this value is negative, we conclude that $\lambda=\frac{n}{t}$ which then makes our MLE $\hat{\lambda}=\frac{N}{t}$.
+
+We will now calculate the bias, variance, and standard error of the MLE individually.
+
+Bias: We have $bias(\hat{\lambda})=E(\hat{\lambda})-\lambda=E(\frac{N}{t})=\frac{E(N)}{t}-\lambda=\frac{\lambda t}{t}-\lambda=\lambda-\lambda=0$ Therefore, we know that the bias of our MLE $\hat{\lambda}$ is $0$ (In other words, $\hat{\lambda}$ is an unbiased estimator).
+
+Variance: We can pull constants out of a variance equation by squaring them. This lets us write
+
+$$
+\mathrm{var}(\hat{\lambda})=\mathrm{var}(\frac{N}{t})=\frac{1}{t^{2}}\mathrm{var}(N)=\frac{t\lambda}{t^{2}}=\frac{\lambda}{t}
+$$
+
+MSE: We know that $MSE=bias^{2}+variance$. As $\hat{\lambda}$ is an unbiased estimator, we have $MSE=varience$. Therefore, we have $MSE(\hat{\lambda})=\frac{\lambda}{t}$.
+\medskip
+
+\noin (d) Find the Fisher information $\mathcal{I}(\lambda)$ for $\lambda$. 
+
+Solution: To find the Fischer information, we must find the score function. This is the same as the first derivative of the log-likelihood, which we calculated in part (c) to be
+
+$$
+s(\lambda)=\frac{N}{\lambda}-t
+$$
+
+The Fischer information is then just the variance of the score function. This is calculated as below.
+
+$$
+\mathcal{I}_{\lambda}=\mathrm{var}(s(\lambda))=\mathrm{var}(\frac{N}{\lambda}-t)=\frac{1}{\lambda^{2}}\mathrm{var}(N)=\frac{\lambda t}{\lambda^{2}}=\frac{t}{\lambda}
+$$
+
+Note that we dropped $\mathrm{var}(t)$ as the varience of constants are zero and we pulled out a $\frac{1}{\lambda^{2}}$ from $\mathrm{var}(\frac{N}{\lambda})$ as $\lambda$ is a constant. Therefore, we have $\mathcal{I}_{\lambda}=\frac{t}{\lambda}$.
+
+\medskip
+
+\noin (e) Find the Fisher information $\mathcal{I}(\mu)$ for $\mu$. 
+
+We know that $\mu=\frac{1}{\lambda}$, so we define a function $g(x)=\frac{1}{x}$ to use in our Fisher Information under Parameter Transformation Theorem. Then, we know that $g'(\lambda)=-\frac{1}{\lambda^{2}}$. Plugging this into our theorem gives
+
+$$
+\mathcal{I}_{\mu}=\frac{\mathcal{I}_{\lambda}}{(g'(\lambda))^{2}}=\frac{t/\lambda}{1/\lambda^{4}}=t\lambda^{3}=\frac{t}{\mu^{3}}
+$$
+
+Therefore, we conclude that $\mathcal{I}_{\mu}=\frac{t}{\mu^{3}}$.
+
+
+\medskip
+
+\noin (f) Find the MLE $\hat{\mu}$ of $\mu$. Unfortunately, it has a defect that makes it disastrously bad with positive probability and makes the MSE infinite. What is this defect?
+
+Solution: By invariance of the MLE and the fact that $\mu=\frac{1}{\lambda}$, we have 
+
+$$
+\hat{\mu}_{MLE}=\frac{1}{\hat{\lambda}_{MLE}}
+$$
+
+Substituting in our calculated $\hat{\lambda}_{MLE}$ gives
+
+$$
+\hat{\mu}_{MLE}=\frac{t}{N}.
+$$
+
+This estimator is problematic as $N=0$ with a non-zero probability (The exact probability is $P(N=0)=e^{-\lambda t}$ by the poisson PMF). This will cause the MSE to shoot to infinity at some point.
+
+\medskip
+
+\noin (g) To patch the issue from (f), consider the following estimator for $\mu$: $$\tilde{\mu} = \frac{t}{N+1}.$$ Find the bias of $\tilde{\mu}$ (with a mathematical derivation, not using R or Wolfram Alpha). Then find the variance of $\tilde{\mu}$ (numerically or via simulation) for the case $t = 10$ years, $\lambda = 3$ eruptions per year.
+
+Solution: In order to find the bias of $\tilde{\mu}$, we need to find $E(\tilde{\mu})$. We will do so using LOTUS. The calculations are shown below.
+
+$$
+E(\tilde{\mu})=E(\frac{t}{N+1})=tE(\frac{1}{N+1})=t\sum_{i=0}^{\infty}\frac{1}{i+1}\frac{e^{-\lambda t}(\lambda t)^{i}}{i!}
+$$
+$$
+t\sum_{i=0}^{\infty}\frac{1}{i+1}\frac{e^{-\lambda t}(\lambda t)^{i}}{i!}=\frac{e^{-\lambda t}}{\lambda}\sum_{i=0}^{\infty}\frac{(\lambda t)^{i+1}}{(i+1)!}=\frac{e^{-\lambda t}}{\lambda}\sum_{j=1}^{\infty}(\frac{(\lambda t)^{j}}{(j)!}+1-1)
+$$
+
+We can rewrite $1=\frac{(\lambda t)^{j}}{j!}$ when $j-0$. This means we can write
+
+$$
+\frac{e^{-\lambda t}}{\lambda}\sum_{j=1}^{\infty}(\frac{(\lambda t)^{j}}{(j)!}+1-1)=\frac{e^{-\lambda t}}{\lambda}\sum_{j=0}^{\infty}(\frac{(\lambda t)^{j}}{(j)!}-1)
+$$
+
+Pattern matching this with the taylor series for $e^{x}$ gives
+
+$$
+\frac{e^{-\lambda t}}{\lambda}\sum_{j=0}^{\infty}(\frac{(\lambda t)^{j}}{(j)!}-1)=\frac{e^{-\lambda t}}{\lambda}(e^{\lambda t}-1)=\frac{1}{\lambda}(1-e^{-\lambda t})=\mu-\mu e^{-\frac{t}{\mu}}
+$$
+
+Therefore, we have
+
+$$
+\mathrm{Bias}({\tilde{\mu}})=E(\frac{t}{N+1})-\mu=\mu-\mu e^{-\frac{t}{\mu}}-\mu=-\mu e^{-\frac{t}{\mu}}
+$$
+
+We will now calculate the variance of $\tilde{\mu}$ using simulation. The code and actual variance values are shown below.
+
+```{r}
+#initialize variables
+set.seed(111)
+trials <- 10^4
+t <- 10
+lambda <- 3
+
+#Simulate N
+N <- rpois(trials, t*lambda)
+
+print(paste("The MSE is: ", var(t/(N+1))))
+```
+\medskip
+
+\noin (h) The dataset \texttt{volcano.csv} contains information about 294 major volcanic eruptions in the 20th century. It is in the Data folder on Canvas.  We obtained the data from the National Centers for Environmental Information: \url{https://www.ngdc.noaa.gov/hazard/volcano.shtml}
+ 
+
+\medskip
+ 
+\noin As is often the case when working with real data, some tricky issues with pre-processing came up. In particular, to build this dataset we started with all the eruptions in the 20th century from the Significant Volcanic Eruption Database. We then removed a small number of eruptions with missing date information (missing data is a commonly encountered situation and an interesting topic in its own right, but not our focus at the moment and luckily not a major issue here). We also merged two eruptions by the same volcano if they were within a year of each other (since an eruption can last for months or even years). 
+
+\medskip
+
+\noin Find the estimate $\hat{\lambda}$ for this dataset, and its estimated standard error (assuming that ``major volcanic eruption" is well-defined and that all major volcanic eruptions in the 20th century have been included in the dataset). 
+
+Solution: We can use the formula for the variance of $\hat{\lambda}$ that we calculated in part $C$ to calculate the SE of $\hat{\lambda}$. Note that the data given is in the 20th century, so $t=100$. We are also given that $N=294$ which means that $\hat{\lambda}=\frac{N}{t}=\frac{294}{100}=2.94$
+
+$$
+SE(\hat{\lambda})=\sqrt{\mathrm{var}(\hat{\lambda})}=\sqrt{\frac{\lambda}{t}}=\sqrt{\frac{294/100}{100}}=0.171464
+$$
+
+\medskip
+
+\noin (i)  Let $t_1,t_2,\dots,t_n$ be the eruption times in the dataset discussed in  the previous part, where $n = 294$, and let $x_1 = t_1, x_2 = t_2 - t_1, \dots, x_{n} = t_{n} - t_{n-1}$ be the interarrival times. In this part the goal is to visually, informally diagnose whether an Exponential distribution (which is implied by the Poisson process model) is a good fit for the $x_i$.  Plot the empirical CDF of the interarrival times $x_1,x_2,\dots,x_n$ from the dataset. Also plot the  $\Expo(\hat{\lambda})$ CDF, and briefly compare the two CDFs. (You can give both plots on the same graph in contrasting colors, or have the two plots side-by-side with the axes set up in the same way.)
+
+Solution: The $R$ code is shown below.
+
+```{r}
+#import dataset
+volcano <- read.csv("volcano.csv")
+
+#Initialize array of times (i.e. set each t_{i} value)
+volcano$time <- as.numeric(as.Date(paste(volcano$Year, volcano$Month, volcano$Day, 
+sep="-"))-as.Date(paste(1901,1,1,sep="-")))
+
+#Createing each x_{i} interarrival time
+interarrival <- volcano$time[2:length(volcano$time)] - 
+volcano$time[1:length(volcano$time)-1]
+
+#Plot ECDF of interarrival times
+plot(ecdf(interarrival), main="ECDF of Interarrival times of Eruptions and CDF of estimate",
+xlab="Time (years)", ylab="CDF/EDCF values")
+
+#Plot CDF with estimated \lambda value
+curve(1-exp(-2.94 * x / 365), xlab = "Time (years)", ylab="CDF/ECDF values", add=T, col="red")
+```
+
+\bigskip
+
+\noin 2. Let $X_{j}\overset{\textrm{i.i.d.}}{\sim }\N(\theta,1)$ for $j=1,\dots,n$ be observed. Define 
+\[ Y_j =
+  \begin{cases}
+    1,       & \quad \text{if } X_j >0,\\
+    0,  & \quad \text{if } X_j \leq 0.
+  \end{cases}
+\]
+The estimand is $\psi=P(Y_1=1)$. Two scientists are debating whether to base their estimator on the $X_j$'s or the $Y_j$'s. 
+
+ \medskip
+
+ \noin Scientist A: ``We should use the $X_j$'s since it would destroy valuable information to reduce to the $Y_j$'s. Why dichotomize unnecessarily rather than using the full strength of our data?"
+
+ \medskip
+
+ \noin Scientist B: ``The information lost by reducing to the $Y_j$'s is irrelevant! The estimand is defined only in terms of $Y_1$, so at the end of the day only the $Y_j$'s matter for our inference. Also, if the model for the $X_j$'s is wrong, we will be on much safer ground focusing on the $Y_j$'s rather than relying heavily on the Normal assumption."
+
+\medskip
+
+\noin In this problem, you will compare the performance of an estimator based on the $X_j$'s to one based only on the $Y_j$'s. 
+
+ \medskip
+
+ \noin (a) Find the MLE $\hat{\psi}$ of $\psi$ based on $X_1,\dots,X_n$.
+
+ Solution: We can use transformations to calculate $\psi$. The process is shown below.
+ 
+ $$
+ \psi=P(Y_{1}=1)=P(X_{1}>0)=1-P(X_{1}<0)=1-\Phi(-\theta)
+ $$
+
+  We know that the MLE of $\theta$ is $\hat{\theta}=\overline{X}=\frac{1}{n}\sum_{i=1}^{n}X_{i}$. Therefore, we have
+  
+  $$
+  \hat{\theta}=1-\Phi(-\hat{\theta})=1-\Phi(-\overline{X})=\Phi(\overline{X})
+  $$
+
+Note that we have $1-\Phi(-\overline{X})=\Phi(\overline{X})$ by symmetry of the normal CDF.
+
+ \medskip
+
+
+  \noin (b) Define $\tilde{\psi}=\overline{Y}$.  Show that $\tilde{\psi}$ is a consistent estimator of $\psi$.
+
+  Solution: By definition, we have 
+  
+  $$
+  \tilde{\psi}=\overline{Y}=\frac{Y_{1}+Y_{2}+\cdots+Y_{n}}{n}
+  $$
+
+  Then by the Law of Large Numbers, we have $\overline{Y}=E(Y_{1})$. Fundamental bridge allows us to write $E(Y_{1})=P(Y_{1}=1)=\psi$ by definition. Therefore, we conclude that $\tilde{\psi}=\overline{Y}=\psi$ which allows us to conclude that $\tilde{\psi}$ is a consistent estimator of $\psi$.
+  
+ \medskip
+
+
+\noin (c) Derive the asymptotic distribution of the MLE $\hat{\psi}$.  
+
+Solution: As $X_{i}\sim\mathcal{N}(\theta,1)$ are i.i.d. we can use CLT to write
+
+$$
+\sqrt{n}(\overline{X}-\theta)\xrightarrow{d}\mathcal{N}(0,1)
+$$
+
+Then, we can use the delta method with the normal CDF of our function. This gives us
+
+$$
+\sqrt{n}(\Phi(\overline{X})-\Phi(\theta))=\sqrt{n}(\hat{\psi}-\Phi(\theta))\xrightarrow{d}\mathcal{N}(0,(\Phi^{'}(\theta)^{2}))=\mathcal{N}(0,\phi(\theta)^{2}) \text{ when } n\to\infty
+$$
+
+where $\phi$ and $\Phi$ are the normal PDF and CDF respectively. Now, we can solve for $\hat{\phi}$ which gives us
+
+$$
+\hat{\psi}\sim\mathcal{N}(\Phi(\theta),\frac{\phi(\theta)^{2}}{n})
+$$
+
+ \medskip
+
+
+\noin (d) Find the approximate standard errors for $\hat{\psi}$ and $\tilde{\psi}$, assuming that $n$ is large. Calculate these approximate standard errors numerically when $n = 100$, for the cases $\theta = 0$ and $\theta = 1$.
+
+Solution: We will first find the standard error for $\hat{\psi}$. As shown in part $c$, we know that the distribution of $\hat{\psi}$ is $\hat{\psi}\sim\mathcal{N}(\Phi(\theta),\frac{\phi(\theta)^{2}}{n})$ for $n$ large. Then, we have an approximate variance of $\mathrm{var}(\hat{\psi})=\frac{\phi(\theta)^{2}}{n}$. Therefore, we have $SE(\hat{\psi})=\sqrt{\mathrm{var}(\hat{\psi})}=\frac{\phi(\theta)}{\sqrt{n}}$.
+
+Next, we will find the standard error for $\tilde{\psi}$. We know that $\tilde{\psi}=\overline{Y}$, so we will calculate $\mathrm{var}(\tilde{\psi})$ with LOTE. $E(Y_{1}^{2})=1^{2}P(Y_{1}=1)+0^{2}P(Y_{1}=0)=\psi$. We also calculated in part (b) that $E(Y_{1})=\psi$. Therefore, we have $\mathrm{var}(Y_{1})=E(Y_{1}^{2})-E(Y_{1})^{2}=\psi-\psi^{2}$. As each $Y_{i}$ is i.i.d., we know that $\mathrm{var}(\tilde{\psi})=E((\tilde{\psi}^{2})-E(\tilde{\psi})^{2}=\frac{\psi-\psi^{2}}{n}$. This means that $SE(\tilde{\psi})=\sqrt{\mathrm{var}(\tilde{\psi})}=\sqrt{\frac{\psi-\psi^{2}}{n}}=\sqrt{\frac{\Phi(\theta)-\Phi(\theta)^{2}}{n}}$.
+
+Finally, we will simulate the standard error when $n=100$ and $\theta=0$ and $\theta=1$. The code for this is shown below.
+
+```{r}
+#initialize values
+n <- 100
+theta_0 <- 0
+theta_1 <- 1
+#create each SE using derived formulas
+hat_0 <- dnorm(pnorm(theta_0))/sqrt(n)
+hat_1 <- dnorm(pnorm(theta_1))/sqrt(n)
+tilde_0 <-sqrt((pnorm(theta_0)-pnorm(theta_0)^2)/(n))
+tilde_1 <-sqrt((pnorm(theta_1)-pnorm(theta_1)^2)/(n))
+#Print results
+print(paste("SE for psi hat when theta=0: ",hat_0))
+print(paste("SE for psi hat when theta=1: ",hat_1))
+print(paste("SE for psi tilde when theta=0: ",tilde_0))
+print(paste("SE for psi tilde when theta=1: ",tilde_1))
+```
+
+ \medskip
+
+
+\noin (e) Now suppose that the model for $X_i$ was \emph{misspecified}, with the true data generating process being $X_{i}\overset{\textrm{i.i.d.}}{\sim } \textrm{Cauchy}$, with PDF 
+$$f(x) = \frac{1}{\pi (1+x^2)}.$$ Unfortunately, the scientists do not know this, so they still calculate  $\hat{\psi}$ and $\tilde{\psi}$ as before. Let $n=100$. Simulate at least $10^4$ datasets for this problem, and  use your simulation to compare the performance of $\hat{\psi}$ and $\tilde{\psi}$ in this Cauchy setting.
+
+Solution: The Cauchy distribution is a symmetric distribution. Therefore, we know that the true value of $\psi$ is $\psi=\frac{1}{2}$. We will use this fact in our code which is shown below.
+
+```{r}
+#set seed and initialize values
+trials <- 10^4
+n <- 100
+hats <- vector()
+tildes <- vector()
+
+for(i in 1:trials){
+  Y <- rcauchy(n)
+  tempHat <- pnorm((mean(Y)))
+  tempTilde <- sum(Y>0)/100
+  hats <- c(hats, tempHat)
+  tildes <- c(tildes, tempTilde)
+}
+
+#print out hat statistics
+print(paste("The bias for the hats is: ", mean(hats)-0.5))
+print(paste("The varience for the hats is: ", sd(hats)^2))
+print(paste("The MSE for the hats is: ", mean(hats)-0.5+sd(hats)^2))
+#print out tilde statistics
+print(paste("The bias for the tildes is: ", mean(tildes)-0.5))
+print(paste("The varience for the tildes is: ", sd(tildes)^2))
+print(paste("The MSE for the tildes is: ", mean(tildes)-0.5+sd(tildes)^2))
+```
+
+\bigskip
+
+\noin 3. Anderson McKendrick was a Scottish doctor and epidemiologist. In the article \emph{Applications of Mathematics to Medical Problems} (Proceedings of the Edinburgh Mathematical Society, 1925), he studied data from a cholera epidemic in a village in India. 
+
+\medskip
+
+\noin Let $n_k$ be the number of households in the village that are observed to have exactly $k$ cases of cholera, for $k=0,1,2,\dots$. The data are $n_0,n_1,n_2,\dots$. Let $n$ be the number of households that were observed (so $n=n_0+n_1+n_2+\dots$).
+
+\medskip
+
+\noin (a) A naive approach is to assume the number of cases in a household is $\Pois(\lambda)$ (for some unknown $\lambda$), with independence across households. For this part only, assume this naive model. Find the MLE of $\lambda$ and the MLE of the probability that a household has no cases of cholera  (in terms of $n,n_0,n_1,\dots$).
+
+Solution: We will define $h_{k}$ as the number of observed households with $k$ cholera outbreaks. As each one of these is distributed poisson with parameter $\lambda$, we know that the likelihood function $L(\lambda;h_{1},\dots,h_{n})=\lambda^{\sum_{i=1}^{n}h_{i}}e^{-n\lambda}$.
+
+To transform this likelihood function to be in terms of $n,n_{0},n_{1},\dots$, we notice that $\sum_{i=1}^{n}h_{i}=\sum_{j=0}^{\infty}jn_{j}$. Substituting this value in gives $L(\lambda;n,n_{0},n_{1},\dots)=\lambda^{\sum_{j=0}^{\infty}jn_{j}}e^{-n\lambda}$. Then, our log likelihood is
+
+$$
+\ell(\lambda;n,n_{0},n_{1},\dots)=(\sum_{j=0}^{\infty}jn_{j})\ln(\lambda)-n\lambda
+$$
+
+Then, taking the first derivative and setting it equal to zero will give
+
+$$
+\frac{d\ell(\lambda)}{d\lambda}=\sum_{j=0}^{\infty}jn_{j}\frac{1}{\lambda}-n=0\implies\lambda=\frac{\sum_{j=0}^{\infty}jn_{j}}{n}.
+$$
+
+Note that the second derivative at this point is $-\sum_{j=0}^{\infty}jn_{j}\frac{1}{\lambda^{2}}$ which is always negative. Therefore, we have the MLE for $\lambda$ as $\hat{\lambda}=\frac{\sum_{j=0}^{\infty}jn_{j}}{n}$.
+
+The MLE of the probability that a given household has no cases of cholera is given by $P(h_{k}=0;\lambda)=e^{-\lambda}$. As $e^{x}$ is injective, we can use invarience of the MLE to write the MLE of the probability hat a given household has no cases of cholera as $e^{-\hat{\lambda}}=e^{-\frac{\sum_{j=0}^{\infty}jn_{j}}{n}}$
+
+\medskip
+
+\noin (b) In the actual data, it was found that there were far more households with no cases than the naive model from (a) would predict. A natural explanation of this is that only some households were exposed to cholera (so the number of cases is $0$ in all the unexposed households, plus possibly $0$ by luck in some of the exposed households). 
+
+\medskip
+
+\noin McKendrick, after some analysis, wrote:
+
+\medskip
+
+``This suggests that the disease was probably water borne, that there were a number of wells, and that the inhabitants of 93 out of 223 houses drank from one well which was infected."
+
+\medskip
+
+\noin It is somewhat mysterious how he came up with the number 93 (in the data $n = 223$, but the $93$ is somehow estimated, not something that is observed). The goal of this part is to explain where the 93 came from. Let 
+$$n = m_0 + m_1,$$
+where $m_0$ is the number of unexposed households and $m_1$ is the number of exposed households. So $n$ is known but $m_0$ and $m_1$ are unknown. 
+
+\medskip
+
+\noin Suppose that the numbers of cases in \emph{exposed} households are independent $\Pois(\lambda)$ r.v.s.  Give a MoM of $(m_1,\lambda)$ based on considering the theoretical mean and variance of a Poisson. Express your answer in terms of the statistics
+$$s_1 = \sum_{k=1}^{\infty} k n_k, \, s_2 = \sum_{k=1}^{\infty} k^2 n_k.$$
+Calculate the estimated $(m_1,\lambda)$ numerically for the actual data, which were
+$$(n_0,n_1,n_2,n_3,n_4) = (168, 32, 16, 6, 1),$$
+and $n_k = 0$ for $k \geq 5$. Is the estimated $m_1$ close to 93? 
+
+Solution: The problem defines $m_{1}$ to be the number of households that are exposed to cholera. We also know that the number of cases in this household is distributed $\Pois(\lambda)$. Then, for any given household, the number of cases $N$ is distributed $N\sim\Pois(\lambda)$. By poisson properties, we have
+
+$$
+E(N)=\mathrm{var}(N)=\lambda, \text{ and } E(N^{2})=\mathrm{var}(N)+E(N)^{2}=\lambda+\lambda^{2} 
+$$
+
+By the definition of $s_{1}$ and $m_{1}$, we know that the average number of cases for each infected household is $E(N)=\frac{s_{1}}{m_{1}}$. We also know by LOTUS that $E(N^{2})=\frac{s_{2}}{}$ Therefore, we can write the estimator $\hat{\lambda}$ as follows
+
+$$
+\hat{\lambda}=\frac{s_{1}}{\hat{m_{1}}}=\frac{s_{2}}{\hat{m_{1}}}-(\frac{s_{1}}{\hat{m_{1}}})^{2}
+$$
+We can now solve these equations for $\hat{m_{1}}$ and $\hat{\lambda}$ to get our MoM estimates. The process is shown below
+
+$$
+\frac{s_{1}}{\hat{m_{1}}}=\frac{s_{2}}{\hat{m_{1}}}-(\frac{s_{1}}{\hat{m_{1}}})^{2}\implies s_{1}=s_{2}-\frac{s_{1}^{2}}{\hat{m_{1}}}
+$$
+$$
+\hat{m_{1}}=\frac{s_{1}^{2}}{s_{2}-s_{1}}
+$$
+
+Plugging this back into our original equation and solving for $\hat{\lambda}$ gives
+
+$$
+\hat{\lambda}=\frac{s_{2}-s_{1}}{s_{1}}
+$$
+
+Therefore, our MoM estimator for $(\hat{m_{1}},\hat{\lambda})=(\frac{s_{1}^{2}}{s_{2}-s_{1}},\frac{s_{2}-s_{1}}{s_{1}})$
+
+We will now calculate these MoM estimators for the given data. Our first step is to calculate $s_{1}$ and $s_{2}$.
+
+$$
+s_{1}=\sum_{i=0}^{5}in_{i}=0\times168+1\times32+2\times16+3\times6+4\times1=86
+$$
+$$
+s_{2}=\sum_{i=0}^{5}in_{i}=0^{2}\times168+1^{2}\times32+2^{2}\times16+3^{2}\times6+4^{2}\times1=166
+$$
+Plugging these values back into the MoM estimator lets us calculate
+
+$$
+\hat{m_{1}}=\frac{s_{1}^{2}}{s_{2}-s_{1}}=\frac{86^{2}}{80}=92.45\approx 93.
+$$
+
+Therefore, the estimated $m_{1}$ is very close to 93.
+
+\medskip
+
+\noin (c) Let $Y \sim \Pois(\lambda)$. Find $\textrm{E}[Y | Y > 0]$. 
+
+Solution: As $Y\sim\Pois(\lambda)$, we have $E(Y)=\lambda$. We also know that $P(Y>0)=1-P(Y=0)=1-e^{-\lambda}$ by complimentary counting. LOTE gives us
+
+$$
+E(Y)=E(Y|Y>0)P(Y>0)+E(Y|Y=0)P(Y=0)=E(Y|Y>0)P(Y>0)+0=E(Y|Y>0)P(Y>0)
+$$
+
+Plugging in our calculated values gives
+
+$$
+\lambda=E(Y|Y>0)(1-e^{-\lambda})\implies E(Y|Y>0)=\frac{\lambda}{1-e^{-\lambda}}
+$$
+
+\medskip
+
+\noin (d) For the remainder of this problem, ignore the households with no cholera cases, and suppose that the number of cases in a household with at least one case is a draw from the conditional distribution of a $\Pois(\lambda)$ r.v., given that this Poisson is positive. Also assume independence across households. Show that a MoM $\hat{\lambda}$ of $\lambda$ is the solution to the equation
+$$\frac{ \hat{\lambda} }{ 1 - e^{-\hat{\lambda}}} = \frac{s_1}{n - n_0},$$ 
+where the notation is as above. (You don't have to actually solve this equation!) 
+
+Solution: We will define $N$ as the number of cholera cases of a house with a positive number of cases. As defined in the problem, $N$ is drawn from the conditional distribution of a $\Pois(\lambda)$ random variable given that the variable is positive. This means that our PMF is defined as 
+
+$$
+P(N=n)=\frac{\frac{\lambda^{n}e^{-\lambda}}{n!}}{1-e^{-\lambda}}
+$$
+
+Note that this is the poisson PMF divided by the probability that $N=0$ which gives us our desired PMF by Bayes' rule.
+
+We can use the fact that any PMF sums to 1 over its support to write $\sum_{i=1}^{\infty}\frac{\lambda^{i-1}e^{-\lambda}}{(i-1)!}=1$. This fact allows us to do the following manipulation
+
+$$
+E(N)=\sum_{i=1}^{\infty}i P(N=i)=\sum_{i=1}^{\infty}i\frac{\frac{\lambda^{i}e^{-\lambda}}{i!}}{1-e^{-\lambda}}=\frac{\lambda}{1-e^{\lambda}}\sum_{i=1}^{\infty}\frac{\lambda^{i-1}e^{-\lambda}}{(i-1)!}=\frac{\lambda}{1-e^{-\lambda}}
+$$
+
+We also know that $E(N)$ is the total number of cases divided by the total number of households with at least one case. The total number of cases is $s_{1}$ and the number of households with at least one case is $n-n_{0}$. Therefore, we also have $E(N)=\frac{s_{1}}{n-n_{0}}$. Setting these two values equal to each other gives us 
+
+$$
+\frac{ \hat{\lambda} }{ 1 - e^{-\hat{\lambda}}} = \frac{s_1}{n - n_0}
+$$
+
+as desired.
+
+\medskip
+
+\noin (e) Continuing (d), find the log-likelihood function and the score function. Is the MLE the same as the MoM from (d), or different? 
+
+Solution: We will define the number of cases in the $kth$ household as $H_{k}$. Each $H_{k}$ is distributed conditionally poisson with the same PMF as describe in part (d). Therefore, our likelihood function is
+
+$$
+L(\lambda;h_{1},h_{2},\dots,h_{n-n_{0}})=\prod_{i=1}^{n-n_{0}}\frac{\frac{\lambda^{i}e^{-\lambda}}{i!}}{1-e^{-\lambda}}=\prod_{i=1}^{n-n_{0}}\frac{\lambda^{h_{i}}}{e^{\lambda}-1}
+$$
+Taking the log of each side will give our log likelihood.
+
+$$
+\ell(\lambda;h_{1},h_{2},\dots,h_{n-n_{0}})=-(n-n_0)\ln(e^{\lambda}-1)+\sum_{i=1}^{n-n_{0}}(h_{i})\ln(\lambda)
+$$
+
+We know that $\sum_{i=1}^{n-n_{0}}h_{i}=sum_{i=1}^{\infty}in_{i}=s_{1}$, so our log likelihood can be rewritten as
+
+$$
+\ell(\lambda;s_{1},n,n_{0})=-(n-n_0)\ln(e^{\lambda}-1)+s_{1}\ln(\lambda)
+$$
+
+We will now check if the MLE satisfies the equation $\frac{ \hat{\lambda} }{ 1 - e^{-\hat{\lambda}}} = \frac{s_1}{n - n_0}$ from part $(d)$. To see this, we do the following calculations.
+
+$$
+\frac{d\ell(\lambda:s_{1},n,n_{0})}{d\lambda}=\frac{-(n-n_{0})}{1-e^{-\lambda}}+\frac{s_{1}}{\lambda}=0\implies \frac{s_{1}}{\lambda}=\frac{(n-n_{0})}{1-e^{-\lambda}}\implies\frac{s_{1}}{n-n_{0}}=\frac{\lambda}{1-e^{-\lambda}}
+$$
+
+Therefore, we conclude that the MLE is the same as the MoM estimator in part (d).
